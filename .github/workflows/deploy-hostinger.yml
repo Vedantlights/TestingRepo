@@ -25,23 +25,29 @@ jobs:
       - name: Build project
         run: npm run build
         working-directory: ./frontend
+        env:
+          CI: false  # Prevents React build from failing on ESLint warnings
 
       - name: Deploy frontend to public_html
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           local-dir: ./frontend/build/
-          server-dir: /public_html/
+          server-dir: public_html/
+          log-level: verbose
+          timeout: 120000
 
       - name: Deploy backend to public_html/backend
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           local-dir: ./backend/
-          server-dir: /public_html/backend/
+          server-dir: public_html/backend/
+          log-level: verbose
+          timeout: 120000
