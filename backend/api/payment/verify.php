@@ -2,14 +2,14 @@
 /**
  * Verify Razorpay Payment
  * POST /api/payment/verify.php
- * Body: { "razorpay_order_id": "...", "razorpay_payment_id": "...", "razorpay_signature": "..." }
  */
 
-require_once __DIR__ . '/../../../config/config.php';
-require_once __DIR__ . '/../../../config/database.php';
-require_once __DIR__ . '/../../../utils/response.php';
-require_once __DIR__ . '/../../../utils/auth.php';
-
+ob_start();
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/response.php';
+require_once __DIR__ . '/../../utils/auth.php';
+if (ob_get_level()) ob_clean();
 handlePreflight();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
