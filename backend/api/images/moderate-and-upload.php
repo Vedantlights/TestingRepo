@@ -1600,7 +1600,7 @@ try {
         
         // Build full URL - use UPLOAD_BASE_URL (which points to /backend/uploads)
         // Files are saved to: /backend/uploads/properties/{id}/{filename}
-        // URLs: https://360coordinates.com/backend/uploads/properties/{id}/{filename}
+        // URLs: https://testapi.360coordinates.com/backend/uploads/properties/{id}/{filename}
         if (!defined('UPLOAD_BASE_URL')) {
             error_log("ERROR: UPLOAD_BASE_URL not defined in config.php");
             error_log("Attempting to load config.php again...");
@@ -1614,8 +1614,8 @@ try {
             // Check again after reload attempt
             if (!defined('UPLOAD_BASE_URL')) {
                 error_log("CRITICAL: UPLOAD_BASE_URL still not defined after reload attempt");
-                // Fallback: always use 360coordinates.com for image upload URLs
-                define('UPLOAD_BASE_URL', 'https://360coordinates.com/backend/uploads');
+                // Fallback: always use testapi.360coordinates.com for image upload URLs
+                define('UPLOAD_BASE_URL', 'https://testapi.360coordinates.com/backend/uploads');
                 error_log("Using fallback UPLOAD_BASE_URL: " . UPLOAD_BASE_URL);
             }
         }

@@ -496,7 +496,7 @@ try {
                         return UPLOAD_BASE_URL . substr($img, 9); // Remove '/uploads/' prefix
                     }
                     // Fallback
-                    $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                     return $protocol . '://' . $host . $img;
                 }
@@ -507,7 +507,7 @@ try {
                         return UPLOAD_BASE_URL . '/' . substr($img, 8); // Remove 'uploads/' prefix
                     }
                     // Fallback
-                    $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                     return $protocol . '://' . $host . '/' . $img;
                 }
@@ -535,7 +535,7 @@ try {
                 if (defined('UPLOAD_BASE_URL')) {
                     $property['cover_image'] = UPLOAD_BASE_URL . substr($coverImg, 9); // Remove '/uploads/' prefix
                 } else {
-                    $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                     $property['cover_image'] = $protocol . '://' . $host . $coverImg;
                 }
@@ -544,7 +544,7 @@ try {
                 if (defined('UPLOAD_BASE_URL')) {
                     $property['cover_image'] = UPLOAD_BASE_URL . '/' . substr($coverImg, 8); // Remove 'uploads/' prefix
                 } else {
-                    $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                     $property['cover_image'] = $protocol . '://' . $host . '/' . $coverImg;
                 }

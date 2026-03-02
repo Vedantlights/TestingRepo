@@ -97,7 +97,7 @@ try {
             }
             
             // Fallback
-            $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+            $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             if (strpos($img, '/uploads/') === 0) {
                 return $protocol . '://' . $host . $img;
@@ -152,7 +152,7 @@ try {
                     if (defined('UPLOAD_BASE_URL')) {
                         $property['video_url'] = UPLOAD_BASE_URL . substr($videoUrl, 9); // Remove '/uploads/' prefix
                     } else {
-                        $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                        $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                         $property['video_url'] = $protocol . '://' . $host . $videoUrl;
                     }
@@ -161,7 +161,7 @@ try {
                     if (defined('UPLOAD_BASE_URL')) {
                         $property['video_url'] = UPLOAD_BASE_URL . '/' . substr($videoUrl, 8); // Remove 'uploads/' prefix
                     } else {
-                        $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+                        $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
                         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                         $property['video_url'] = $protocol . '://' . $host . '/' . $videoUrl;
                     }

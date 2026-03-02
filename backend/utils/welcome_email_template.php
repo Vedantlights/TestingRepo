@@ -13,7 +13,7 @@
  */
 function generateWelcomeEmailTemplate($userName, $userEmail) {
     $greeting = htmlspecialchars($userName);
-    $websiteUrl = defined('BASE_URL') ? BASE_URL : 'https://360coordinates.com';
+    $websiteUrl = defined('BASE_URL') ? BASE_URL : 'https://testapi.360coordinates.com';
     $currentYear = date('Y');
     
     $html = '
@@ -125,7 +125,7 @@ function generateWelcomeEmailTemplate($userName, $userEmail) {
  * @return string Plain text email content
  */
 function generateWelcomeEmailPlainText($userName, $userEmail) {
-    $websiteUrl = defined('BASE_URL') ? BASE_URL : 'https://360coordinates.com';
+    $websiteUrl = defined('BASE_URL') ? BASE_URL : 'https://testapi.360coordinates.com';
     $currentYear = date('Y');
     
     // Sanitize user input for plain text (remove newlines and excessive whitespace)

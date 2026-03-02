@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: https://360coordinates.com');
+header('Access-Control-Allow-Origin: https://testapi.360coordinates.com');
 header('Access-Control-Allow-Credentials: true');
 
 // Don't start session yet - check raw state first

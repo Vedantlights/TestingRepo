@@ -16,9 +16,9 @@ if (empty($dbHost) || empty($dbUser) || empty($dbPass) || empty($dbName)) {
     // These are the default values - override via environment variables for security
     define('DB_HOST', $dbHost ?: '127.0.0.1');
     define('DB_PORT', getenv('DB_PORT') ?: '3306');
-    define('DB_NAME', $dbName ?: 'u449667423_lastdata');
-    define('DB_USER', $dbUser ?: 'u449667423_devlop');
-    define('DB_PASS', $dbPass ?: 'V1d2a3n4t@2020');
+    define('DB_NAME', $dbName ?: 'u449667423_Testing');
+    define('DB_USER', $dbUser ?: 'u449667423_Testing');
+    define('DB_PASS', $dbPass ?: 'Shital@765');
 } else {
     // Use environment variables if provided
     define('DB_HOST', $dbHost);

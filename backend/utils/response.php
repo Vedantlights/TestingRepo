@@ -13,6 +13,9 @@ function setCorsHeaders() {
         'http://localhost:3001',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',
+        // Test API
+        'https://testapi.360coordinates.com',
+        'https://www.testapi.360coordinates.com',
         // Production
         'https://360coordinates.com',
         'https://www.360coordinates.com',

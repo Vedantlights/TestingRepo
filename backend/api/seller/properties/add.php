@@ -263,7 +263,7 @@ try {
         if (defined('UPLOAD_BASE_URL')) {
             $imageUrl = UPLOAD_BASE_URL . '/' . $relativePath;
         } else {
-            $host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+            $host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $imageUrl = $protocol . '://' . $host . '/backend/uploads/' . $relativePath;
         }

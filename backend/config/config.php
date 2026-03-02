@@ -11,6 +11,9 @@ $allowed_origins = [
     'http://localhost:3001',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
+    // Test API
+    'https://testapi.360coordinates.com',
+    'https://www.testapi.360coordinates.com',
     // Production - Hostinger / live domains
     'https://360coordinates.com',
     'https://www.360coordinates.com',
@@ -71,11 +74,18 @@ if ($isLocalhost) {
 } else {
     // PRODUCTION (Hostinger)
     // Backend is deployed in /backend/ folder under the current domain.
-    // demo1 subdomain should use demo1.360coordinates.com; main uses 360coordinates.com.
+    // testapi subdomain uses testapi.360coordinates.com; demo1 uses demo1; main uses 360coordinates.com.
     $host = $_SERVER['HTTP_HOST'] ?? '';
     $hostNoPort = preg_replace('/:\d+$/', '', $host);
+    $isTestApi = (stripos($hostNoPort, 'testapi.') === 0);
     $isDemo1 = (stripos($hostNoPort, 'demo1.') === 0);
-    define('BASE_URL', $isDemo1 ? 'https://demo1.360coordinates.com/backend' : 'https://360coordinates.com/backend');
+    if ($isTestApi) {
+        define('BASE_URL', 'https://testapi.360coordinates.com/backend');
+    } elseif ($isDemo1) {
+        define('BASE_URL', 'https://demo1.360coordinates.com/backend');
+    } else {
+        define('BASE_URL', 'https://360coordinates.com/backend');
+    }
     define('ENVIRONMENT', 'production');
     // Error reporting: Log errors but don't display them (prevents HTML breaking JSON responses)
     error_reporting(E_ALL);

@@ -7,22 +7,16 @@
 // Base URL for the PHP backend
 // NOTE: Backend is in /backend/ folder, so API path is /backend/api
 // You can override this at build time with REACT_APP_API_BASE_URL.
-const MAIN_API_URL = 'https://360coordinates.com/backend/api';
-const DEMO1_API_URL = 'https://demo1.360coordinates.com/backend/api';
+const API_BASE = 'https://testapi.360coordinates.com/backend/api';
+const MAIN_API_URL = API_BASE;
+const DEMO1_API_URL = API_BASE;
 
 function inferApiBaseUrl() {
   // Highest priority: explicit build-time override
   if (process.env.REACT_APP_API_BASE_URL) return process.env.REACT_APP_API_BASE_URL;
 
-  // Runtime inference based on current hostname
-  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    const host = window.location.hostname.toLowerCase();
-    if (host.startsWith('demo1.')) return DEMO1_API_URL;
-    return MAIN_API_URL;
-  }
-
-  // Fallback (SSR / unknown): default to main domain
-  return MAIN_API_URL;
+  // Runtime inference: all requests go to test API
+  return API_BASE;
 }
 
 const API_URL = inferApiBaseUrl();

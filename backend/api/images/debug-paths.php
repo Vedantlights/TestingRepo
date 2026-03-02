@@ -95,7 +95,7 @@ if (is_dir($baseDir)) {
 }
 
 echo "\n=== URL MAPPING ===\n";
-$host = $_SERVER['HTTP_HOST'] ?? '360coordinates.com';
+$host = $_SERVER['HTTP_HOST'] ?? 'testapi.360coordinates.com';
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $baseUrl = $protocol . '://' . $host;
 
