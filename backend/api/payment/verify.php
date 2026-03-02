@@ -9,6 +9,17 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/response.php';
 require_once __DIR__ . '/../../utils/auth.php';
+
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR]) && !headers_sent()) {
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Server error. Please try again.']);
+    }
+});
+
 if (ob_get_level()) ob_clean();
 handlePreflight();
 
@@ -104,7 +115,7 @@ try {
         'end_date' => $endDate,
     ]);
     
-} catch (Exception $e) {
-    error_log("Verify payment error: " . $e->getMessage());
-    sendError($e->getMessage(), null, 500);
+} catch (Throwable $e) {
+    error_log("Verify payment error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    sendError('Payment verification failed. Please try again.', null, 500);
 }

@@ -10,6 +10,17 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/response.php';
 require_once __DIR__ . '/../../utils/auth.php';
+
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR]) && !headers_sent()) {
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Server error. Please try again.']);
+    }
+});
+
 if (ob_get_level()) ob_clean();
 handlePreflight();
 
@@ -65,8 +76,14 @@ try {
     ]);
     
     $response = curl_exec($ch);
+    $curlErr = curl_error($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    
+    if ($curlErr) {
+        error_log("Razorpay curl error: " . $curlErr);
+        sendError('Unable to connect to payment service. Please try again.', null, 500);
+    }
     
     if ($httpCode >= 400) {
         $err = json_decode($response, true);
@@ -75,6 +92,10 @@ try {
     }
     
     $order = json_decode($response, true);
+    if (!$order || empty($order['id'])) {
+        error_log("Razorpay invalid response: " . substr($response, 0, 200));
+        sendError('Invalid response from payment service. Please try again.', null, 500);
+    }
     
     sendSuccess('Order created', [
         'order_id' => $order['id'],
@@ -85,7 +106,7 @@ try {
         'plan_id' => $planId,
     ]);
     
-} catch (Exception $e) {
-    error_log("Create order error: " . $e->getMessage());
-    sendError($e->getMessage(), null, 500);
+} catch (Throwable $e) {
+    error_log("Create order error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    sendError('Payment service error. Please try again.', null, 500);
 }
