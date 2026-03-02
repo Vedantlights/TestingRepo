@@ -125,6 +125,10 @@ export const API_ENDPOINTS = {
 
   // Contact form (sendmail to sneha@vedantinfoedge.com)
   CONTACT_SENDMAIL: '/home/sendmail.php',
+
+  // Razorpay Payment
+  PAYMENT_CREATE_ORDER: '/payment/create-order.php',
+  PAYMENT_VERIFY: '/payment/verify.php',
 };
 
 export default API_BASE_URL;

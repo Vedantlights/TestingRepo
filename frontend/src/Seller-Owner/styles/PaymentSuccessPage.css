@@ -1,0 +1,122 @@
+.payment-success-page {
+  min-height: 60vh;
+  padding: 2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-success-card {
+  max-width: 420px;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.payment-success-card.error {
+  border-color: #fecaca;
+}
+
+.payment-success-loader {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #8b5cf6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.payment-success-icon {
+  color: #22c55e;
+  margin-bottom: 1rem;
+}
+
+.payment-success-icon.error {
+  color: #dc2626;
+}
+
+.payment-success-card h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.payment-success-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.payment-success-message {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.payment-success-details {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.payment-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.payment-detail-row span:first-child {
+  color: #64748b;
+}
+
+.payment-detail-row span:last-child {
+  font-weight: 500;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.payment-success-cta {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.payment-success-cta:hover {
+  opacity: 0.95;
+}
+
+.payment-success-secondary {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.payment-success-secondary:hover {
+  color: #475569;
+}

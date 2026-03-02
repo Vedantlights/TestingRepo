@@ -1,17 +1,25 @@
 // src/pages/SellerProperties.jsx
-import React, { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useProperty } from "./PropertyContext";
 import AddPropertyPopup from "./AddPropertyPopup";
 import DeletePropertyModal from "../../components/DeletePropertyModal/DeletePropertyModal";
 import { API_BASE_URL } from "../../config/api.config";
+import { sellerDashboardAPI } from "../../services/api.service";
 import "../styles/SellerProperties.css";
 
 const MAX_PROPERTIES = 3;
 
+// Plan limits for paid listing plans
+const PLAN_LIMITS = { basic_listing: 1, pro_listing: 5 };
+
 const SellerProperties = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { properties, deleteProperty } = useProperty();
+  const [canAddProperty, setCanAddProperty] = useState(false);
+  const [maxAllowedProperties, setMaxAllowedProperties] = useState(MAX_PROPERTIES);
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
@@ -20,6 +28,43 @@ const SellerProperties = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
+
+  // Check if user can add property (active paid plan with slots)
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const { data } = await sellerDashboardAPI.getStats();
+        const sub = data?.subscription;
+        const totalProps = data?.total_properties ?? properties.length;
+        const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+        const isActive = endDate && endDate > new Date();
+        const planType = sub?.plan_type;
+
+        if (planType && PLAN_LIMITS[planType] !== undefined && isActive) {
+          const limit = PLAN_LIMITS[planType];
+          setMaxAllowedProperties(limit);
+          setCanAddProperty(totalProps < limit);
+        } else {
+          setCanAddProperty(false);
+          setMaxAllowedProperties(0);
+        }
+      } catch {
+        setCanAddProperty(false);
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+    checkAccess();
+  }, [properties.length]);
+
+  // Open Add Property form when navigating from payment success
+  useEffect(() => {
+    if (location.state?.openAddProperty && canAddProperty && !checkingAccess) {
+      setEditIndex(null);
+      setShowForm(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.openAddProperty, canAddProperty, checkingAccess, location.pathname, navigate]);
 
   // Filter and sort properties - memoized for performance
   const filteredProperties = useMemo(() => {
@@ -47,13 +92,18 @@ const SellerProperties = () => {
   }, [properties, filterStatus, searchTerm, sortBy]);
 
   const openNew = useCallback(() => {
-    if (properties.length >= MAX_PROPERTIES) {
-      alert(`You can add maximum ${MAX_PROPERTIES} properties.`);
+    if (checkingAccess) return;
+    if (!canAddProperty) {
+      navigate('/seller-dashboard/plans');
+      return;
+    }
+    if (properties.length >= maxAllowedProperties) {
+      alert(`You have reached your plan limit (${maxAllowedProperties}). Upgrade to add more.`);
       return;
     }
     setEditIndex(null);
     setShowForm(true);
-  }, [properties.length]);
+  }, [properties.length, canAddProperty, maxAllowedProperties, checkingAccess, navigate]);
 
   const openEdit = useCallback((idx) => {
     setEditIndex(idx);
@@ -121,7 +171,9 @@ const SellerProperties = () => {
           <div>
             <h1>My Properties</h1>
             <p className="seller-props-subtitle">
-              {properties.length} of {MAX_PROPERTIES} properties listed
+              {canAddProperty
+                ? `${properties.length} of ${maxAllowedProperties} properties listed`
+                : `${properties.length} properties • Choose a plan to add more`}
             </p>
           </div>
           <button className="seller-props-add-btn" onClick={openNew}>

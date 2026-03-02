@@ -734,6 +734,29 @@ export const sellerDashboardAPI = {
 };
 
 // =====================
+// PAYMENT API (Razorpay)
+// =====================
+export const paymentAPI = {
+  createOrder: async (planId) => {
+    return apiRequest(API_ENDPOINTS.PAYMENT_CREATE_ORDER, {
+      method: 'POST',
+      body: JSON.stringify({ plan_id: planId }),
+    });
+  },
+  verify: async (razorpayOrderId, razorpayPaymentId, razorpaySignature, planId) => {
+    return apiRequest(API_ENDPOINTS.PAYMENT_VERIFY, {
+      method: 'POST',
+      body: JSON.stringify({
+        razorpay_order_id: razorpayOrderId,
+        razorpay_payment_id: razorpayPaymentId,
+        razorpay_signature: razorpaySignature,
+        plan_id: planId,
+      }),
+    });
+  },
+};
+
+// =====================
 // SELLER INQUIRIES API
 // =====================
 export const sellerInquiriesAPI = {

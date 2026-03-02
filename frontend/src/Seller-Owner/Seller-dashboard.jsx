@@ -11,6 +11,10 @@ import Subscription from './Components/PlainTimerPage';
 // Use buyer's ViewDetailsPage for all property details (same layout for buyers and sellers)
 import ViewDetailsPage from '../UserDashboard/pages/ViewDetailsPage';
 import SellerContactPage from './Components/SellerContactPage';
+import PlansPage from './Components/PlansPage';
+import CheckoutPage from './Components/CheckoutPage';
+import PaymentSuccessPage from './Components/PaymentSuccessPage';
+import PaymentFailedPage from './Components/PaymentFailedPage';
 
 import { PropertyProvider, useProperty } from './Components/PropertyContext';
 import { sellerDashboardAPI } from '../services/api.service';
@@ -68,6 +72,8 @@ const SellerDashboardContent = () => {
       newTab = 'profile';
     } else if (location.pathname.includes('/subscription') || location.pathname === '/seller-dashboard/subscription') {
       newTab = 'subscription';
+    } else if (location.pathname.includes('/plans') || location.pathname.includes('/checkout') || location.pathname.includes('/payment-success') || location.pathname.includes('/payment-failed')) {
+      newTab = null; // Don't change tab on payment pages
     } else if (location.pathname.includes('/support') || location.pathname === '/seller-dashboard/support') {
       newTab = 'support';
     } else if (location.pathname === '/seller-dashboard' || location.pathname === '/seller-dashboard/') {
@@ -254,7 +260,13 @@ const SellerDashboardContent = () => {
       return <ViewDetailsPage />;
     }
 
-    // CHECK 2: Handle tab-based content
+    // CHECK 2: Payment flow pages
+    if (location.pathname.includes('/plans')) return <PlansPage />;
+    if (location.pathname.includes('/checkout')) return <CheckoutPage />;
+    if (location.pathname.includes('/payment-success')) return <PaymentSuccessPage />;
+    if (location.pathname.includes('/payment-failed')) return <PaymentFailedPage />;
+
+    // CHECK 3: Handle tab-based content
     switch (activeTab) {
       case 'overview':
         console.log('📊 Rendering SellerOverview');

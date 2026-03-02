@@ -60,7 +60,9 @@ try {
             'free' => FREE_PLAN_PROPERTY_LIMIT,
             'basic' => BASIC_PLAN_PROPERTY_LIMIT,
             'pro' => PRO_PLAN_PROPERTY_LIMIT,
-            'premium' => PREMIUM_PLAN_PROPERTY_LIMIT
+            'premium' => PREMIUM_PLAN_PROPERTY_LIMIT,
+            'basic_listing' => defined('BASIC_LISTING_PROPERTY_LIMIT') ? BASIC_LISTING_PROPERTY_LIMIT : 1,
+            'pro_listing' => defined('PRO_LISTING_PROPERTY_LIMIT') ? PRO_LISTING_PROPERTY_LIMIT : 5,
         ];
         
         $limit = $limits[$planType] ?? FREE_PLAN_PROPERTY_LIMIT;

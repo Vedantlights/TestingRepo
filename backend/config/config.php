@@ -243,6 +243,9 @@ define('FREE_PLAN_PROPERTY_LIMIT', 3);
 define('BASIC_PLAN_PROPERTY_LIMIT', 10);
 define('PRO_PLAN_PROPERTY_LIMIT', 50);
 define('PREMIUM_PLAN_PROPERTY_LIMIT', -1); // Unlimited
+// Razorpay listing plans
+define('BASIC_LISTING_PROPERTY_LIMIT', 1);  // Basic Plan: ₹99, 1 property, 1 month
+define('PRO_LISTING_PROPERTY_LIMIT', 5);    // Pro Plan: ₹399, 5 properties, 1 month
 
 // ============================================
 // IMAGE MODERATION CONFIGURATION
