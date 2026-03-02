@@ -3,51 +3,82 @@ name: Deploy to Hostinger
 on:
   push:
     branches:
-      - main  # trigger on push to main
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
 
       - name: Setup Node.js
+        if: steps.filter.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      - name: Cache Node modules
+        if: steps.filter.outputs.frontend == 'true'
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
-        run: npm install
+        if: steps.filter.outputs.frontend == 'true'
+        run: npm ci
         working-directory: ./frontend
 
       - name: Build project
+        if: steps.filter.outputs.frontend == 'true'
         run: npm run build
         working-directory: ./frontend
         env:
-          CI: false  # Prevents React build from failing on ESLint warnings
+          CI: false
 
       - name: Deploy frontend to public_html
+        if: steps.filter.outputs.frontend == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
+          protocol: ftps
+          security: loose
           local-dir: ./frontend/build/
           server-dir: public_html/
           log-level: verbose
-          timeout: 120000
+          timeout: 300000
 
       - name: Deploy backend to public_html/backend
+        if: steps.filter.outputs.backend == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
+          protocol: ftps
+          security: loose
           local-dir: ./backend/
           server-dir: public_html/backend/
           log-level: verbose
-          timeout: 120000
+          timeout: 300000
