@@ -282,7 +282,7 @@ const FURNISHING_OPTIONS = ["Unfurnished", "Semi-Furnished", "Fully-Furnished"];
 const FACING_OPTIONS = ["North", "South", "East", "West", "North-East", "North-West", "South-East", "South-West"];
 const AGE_OPTIONS = ["New Construction", "Less than 1 Year", "1-5 Years", "5-10 Years", "10+ Years"];
 
-export default function AddPropertyPopup({ onClose, editIndex = null, initialData = null, maxAllowedProperties = 0 }) {
+export default function AddPropertyPopup({ onClose, editIndex = null, initialData = null }) {
   const { addProperty, updateProperty, properties } = useProperty();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -311,9 +311,10 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
   const popupBodyRef = useRef(null);
   const popupContainerRef = useRef(null);
 
-  // Check property limit (user must have a package; limit comes from plan)
+  // Check property limit (3 properties max for free users)
+  const PROPERTY_LIMIT = 3;
   const currentPropertyCount = properties?.length || 0;
-  const hasReachedLimit = editIndex === null && (maxAllowedProperties <= 0 || currentPropertyCount >= maxAllowedProperties);
+  const hasReachedLimit = editIndex === null && currentPropertyCount >= PROPERTY_LIMIT;
 
   // Check if property is older than 24 hours (only allow title and price editing)
   const isPropertyOlderThan24Hours = () => {
@@ -2984,24 +2985,18 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
             </div>
 
             <div className="seller-popup-limit-warning-content">
-              <h3>{maxAllowedProperties <= 0 ? 'Package Required' : 'Property Limit Reached'}</h3>
-              <p>
-                {maxAllowedProperties <= 0
-                  ? 'You need an active listing package to add properties. Subscribe to a plan to list your property.'
-                  : `You've uploaded ${currentPropertyCount} out of ${maxAllowedProperties} properties allowed in your plan.`}
-              </p>
+              <h3>Property Limit Reached</h3>
+              <p>You've uploaded <strong>{currentPropertyCount}</strong> out of <strong>{PROPERTY_LIMIT}</strong> properties allowed in your free plan.</p>
 
-              {maxAllowedProperties > 0 && (
               <div className="seller-popup-limit-progress">
                 <div className="seller-popup-limit-progress-bar">
                   <div
                     className="seller-popup-limit-progress-fill"
-                    style={{ width: `${(currentPropertyCount / maxAllowedProperties) * 100}%` }}
+                    style={{ width: `${(currentPropertyCount / PROPERTY_LIMIT) * 100}%` }}
                   ></div>
                 </div>
-                <span className="seller-popup-limit-progress-text">{currentPropertyCount}/{maxAllowedProperties} Properties Used</span>
+                <span className="seller-popup-limit-progress-text">{currentPropertyCount}/{PROPERTY_LIMIT} Properties Used</span>
               </div>
-              )}
 
               <div className="seller-popup-limit-warning-features">
                 <p className="seller-popup-features-title">Upgrade to Pro to unlock:</p>
@@ -3040,13 +3035,14 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
               </button>
               <button className="seller-popup-limit-btn-primary" onClick={() => {
                 onClose();
-                window.location.href = '/seller-dashboard/plans';
+                // Navigate to subscription page - you can pass a callback or use navigate
+                window.location.href = '/subscription';
               }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" />
                 </svg>
-                {maxAllowedProperties <= 0 ? 'Choose a plan' : 'Upgrade to Pro'}
+                Upgrade to Pro
               </button>
             </div>
 

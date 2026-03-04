@@ -238,8 +238,8 @@ define('WORKER_WELCOME_EMAIL_SCRIPT', dirname(__DIR__) . '/workers/send_welcome_
 define('DEFAULT_PAGE_SIZE', 20);
 define('MAX_PAGE_SIZE', 300);
 
-// Property Limits (free = 0: user must have a paid package to upload)
-define('FREE_PLAN_PROPERTY_LIMIT', 0);
+// Property Limits
+define('FREE_PLAN_PROPERTY_LIMIT', 3);
 define('BASIC_PLAN_PROPERTY_LIMIT', 10);
 define('PRO_PLAN_PROPERTY_LIMIT', 50);
 define('PREMIUM_PLAN_PROPERTY_LIMIT', -1); // Unlimited
