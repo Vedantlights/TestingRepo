@@ -8,8 +8,6 @@ import { API_BASE_URL } from "../../config/api.config";
 import { sellerDashboardAPI } from "../../services/api.service";
 import "../styles/SellerProperties.css";
 
-const MAX_PROPERTIES = 3;
-
 // Plan limits for paid listing plans
 const PLAN_LIMITS = { basic_listing: 1, pro_listing: 5 };
 
@@ -448,7 +446,7 @@ const SellerProperties = () => {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <AddPropertyPopup
+        <AddPropertyPopup maxAllowedProperties={maxAllowedProperties}
           onClose={() => setShowForm(false)}
           editIndex={editIndex}
           initialData={editIndex !== null ? properties[editIndex] : null}

@@ -49,6 +49,12 @@ try {
             $planType = 'free';
         }
         
+        // Require an active paid package — no free property uploads
+        $paidPlans = ['basic', 'pro', 'premium', 'basic_listing', 'pro_listing'];
+        if ($planType === 'free' || !in_array($planType, $paidPlans)) {
+            sendError('You need an active listing package to add properties. Please subscribe to a plan.', null, 403);
+        }
+        
         // Get current property count
         $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE user_id = ?");
         $stmt->execute([$user['id']]);

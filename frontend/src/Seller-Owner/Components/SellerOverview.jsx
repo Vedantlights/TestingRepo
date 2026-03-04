@@ -4,17 +4,49 @@ import { useNavigate } from "react-router-dom";
 import { useProperty } from "./PropertyContext";
 import { useAuth } from "../../context/AuthContext";
 import AddPropertyPopup from "./AddPropertyPopup";
+import { sellerDashboardAPI } from "../../services/api.service";
 import "../styles/SellerOverview.css";
 
-const MAX_PROPERTIES = 10;
+const PLAN_LIMITS = { basic_listing: 1, pro_listing: 5 };
 
 const SellerOverview = ({ onNavigate }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { properties, inquiries, getStats, refreshProperties, loading, error } = useProperty();
   const [showPopup, setShowPopup] = useState(false);
+  const [canAddProperty, setCanAddProperty] = useState(false);
+  const [maxAllowedProperties, setMaxAllowedProperties] = useState(0);
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   const stats = getStats();
+
+  // Check if user can add property (active paid plan with slots)
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const { data } = await sellerDashboardAPI.getStats();
+        const sub = data?.subscription;
+        const totalProps = data?.total_properties ?? properties.length;
+        const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+        const isActive = endDate && endDate > new Date();
+        const planType = sub?.plan_type;
+
+        if (planType && PLAN_LIMITS[planType] !== undefined && isActive) {
+          const limit = PLAN_LIMITS[planType];
+          setMaxAllowedProperties(limit);
+          setCanAddProperty(totalProps < limit);
+        } else {
+          setCanAddProperty(false);
+          setMaxAllowedProperties(0);
+        }
+      } catch {
+        setCanAddProperty(false);
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+    checkAccess();
+  }, [properties.length]);
 
   // Refresh properties when component mounts or comes into focus (to get updated views)
   useEffect(() => {
@@ -46,8 +78,13 @@ const SellerOverview = ({ onNavigate }) => {
   }, [refreshProperties]);
 
   const handleAddProperty = () => {
-    if (properties.length >= MAX_PROPERTIES) {
-      alert(`You can add maximum ${MAX_PROPERTIES} properties.`);
+    if (checkingAccess) return;
+    if (!canAddProperty) {
+      navigate('/seller-dashboard/plans');
+      return;
+    }
+    if (properties.length >= maxAllowedProperties) {
+      alert(`You have reached your plan limit (${maxAllowedProperties}). Upgrade to add more.`);
       return;
     }
     setShowPopup(true);
@@ -435,7 +472,7 @@ const SellerOverview = ({ onNavigate }) => {
       </div>
 
       {/* Add Property Popup */}
-      {showPopup && <AddPropertyPopup onClose={() => setShowPopup(false)} />}
+      {showPopup && <AddPropertyPopup onClose={() => setShowPopup(false)} maxAllowedProperties={maxAllowedProperties} />}
     </div>
   );
 };
