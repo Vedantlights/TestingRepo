@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/PlansPage.css";
 
 const PLANS = [
@@ -20,9 +20,19 @@ const PLANS = [
 
 const PlansPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const pendingProperty = location.state?.pendingProperty || null;
+  const fromAddProperty = location.state?.fromAddProperty || false;
 
   const handleSelectPlan = (planId) => {
-    navigate("/seller-dashboard/checkout", { state: { planId } });
+    navigate("/seller-dashboard/checkout", {
+      state: {
+        planId,
+        pendingProperty,
+        fromAddProperty,
+      },
+    });
   };
 
   return (

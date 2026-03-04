@@ -34,6 +34,7 @@ try {
     // Only check limits for sellers, not agents
     if ($user['user_type'] === 'seller') {
         $planType = 'free'; // Default
+        $hasPaidPlan = false;
         try {
             // Check if subscriptions table exists
             $checkStmt = $db->query("SHOW TABLES LIKE 'subscriptions'");
@@ -42,11 +43,31 @@ try {
                 $stmt->execute([$user['id']]);
                 $subscription = $stmt->fetch();
                 $planType = $subscription['plan_type'] ?? 'free';
+                if ($planType !== 'free') {
+                    $hasPaidPlan = true;
+                }
             }
         } catch (Exception $e) {
             // Table doesn't exist or error, use default
             error_log("Add Property: Subscriptions table check failed: " . $e->getMessage());
             $planType = 'free';
+            $hasPaidPlan = false;
+        }
+        
+        // Require an active paid plan for sellers
+        if (!$hasPaidPlan) {
+            // Frontend can use "code" to detect this specific case
+            // and redirect the user to the payment / plans UI.
+            sendError(
+                'You need an active listing package to add properties. Please purchase a plan.',
+                [
+                    'code' => 'NO_ACTIVE_PAID_PLAN',
+                    'requires_subscription' => true,
+                    'allowed_plans' => ['basic_listing', 'pro_listing'],
+                    'user_type' => $user['user_type'],
+                ],
+                403
+            );
         }
         
         // Get current property count

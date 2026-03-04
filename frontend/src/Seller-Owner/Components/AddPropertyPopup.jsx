@@ -1,5 +1,6 @@
 // src/components/AddPropertyPopup.jsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProperty } from "./PropertyContext";
 import { sellerPropertiesAPI } from "../../services/api.service";
 import { API_BASE_URL, API_ENDPOINTS } from "../../config/api.config";
@@ -284,6 +285,7 @@ const AGE_OPTIONS = ["New Construction", "Less than 1 Year", "1-5 Years", "5-10 
 
 export default function AddPropertyPopup({ onClose, editIndex = null, initialData = null }) {
   const { addProperty, updateProperty, properties } = useProperty();
+  const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1707,12 +1709,44 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       // Do not call onClose() here as it would unmount the component before modal can render
     } catch (error) {
       setUploadingImages(false);
-      // Show detailed error message
-      const errorMessage = error.message || error.status === 401
-        ? 'Authentication required. Please log in to add properties.'
-        : error.status === 403
-          ? 'Access denied. Please check your permissions.'
-          : 'Failed to save property. Please check your connection and try again.';
+      // Handle subscription error: no active paid plan
+      if (
+        error?.status === 403 &&
+        (error?.data?.code === 'NO_ACTIVE_PAID_PLAN' ||
+          error?.data?.requires_subscription === true)
+      ) {
+        console.warn('No active paid plan. Redirecting to plans/checkout.', error);
+
+        // Create a serializable snapshot of the current form data
+        const { video, ...safeFormData } = formData || {};
+
+        // Inform the user and redirect to plans page with pending property data
+        alert(
+          'You need an active subscription plan to add a property. ' +
+          'Please choose a plan to continue.'
+        );
+
+        navigate('/seller-dashboard/plans', {
+          state: {
+            fromAddProperty: true,
+            pendingProperty: safeFormData,
+          },
+        });
+        return;
+      }
+
+      // Show detailed error message for all other errors
+      let errorMessage;
+      if (error?.status === 401) {
+        errorMessage = 'Authentication required. Please log in to add properties.';
+      } else if (error?.status === 403) {
+        errorMessage = error?.message || 'Access denied. Please check your permissions.';
+      } else {
+        errorMessage =
+          error?.message ||
+          'Failed to save property. Please check your connection and try again.';
+      }
+
       alert(errorMessage);
       console.error('Property save error:', error);
     } finally {

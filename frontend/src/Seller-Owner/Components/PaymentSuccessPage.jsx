@@ -6,8 +6,15 @@ import "../styles/PaymentSuccessPage.css";
 const PaymentSuccessPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId, plan } =
-    location.state || {};
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    planId,
+    plan,
+    pendingProperty,
+    fromAddProperty,
+  } = location.state || {};
 
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
@@ -42,7 +49,14 @@ const PaymentSuccessPage = () => {
   }, [razorpay_order_id, razorpay_payment_id, razorpay_signature, planId, navigate]);
 
   const handleGoToProperties = () => {
-    navigate("/seller-dashboard/properties", { state: { openAddProperty: true } });
+    navigate("/seller-dashboard/properties", {
+      state: {
+        openAddProperty: true,
+        // If the user came from the Add Property flow, restore their form data
+        pendingProperty: fromAddProperty ? pendingProperty : null,
+        fromAddProperty: !!fromAddProperty,
+      },
+    });
   };
 
   if (verifying) {

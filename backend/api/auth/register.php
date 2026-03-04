@@ -357,10 +357,9 @@ try {
         $userRecord = $stmt->fetch();
         $registrationTime = $userRecord['created_at'];
         
-        // Create default subscription (free plan) starting from user's registration time
-        // 3 months = 90 days from registration time
-        $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_type, start_date, end_date) VALUES (?, 'free', ?, DATE_ADD(?, INTERVAL 90 DAY))");
-        $stmt->execute([$userId, $registrationTime, $registrationTime]);
+        // Note: Previously we created a default 'free' subscription here
+        // with a limited-duration trial. Free trials have been removed,
+        // so new users must purchase a listing package before adding properties.
         
         // Create user profile (using pre-checked column flags)
         // Note: user_profiles table may not have full_name and user_type columns

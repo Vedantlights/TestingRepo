@@ -302,8 +302,20 @@ export const PropertyProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error adding property:', error);
-      // Show user-friendly error message
-      const errorMessage = error.message || 'Failed to save property to database. Please check your connection and try again.';
+      // Special handling: no active paid plan - let caller handle subscription flow
+      if (
+        error?.status === 403 &&
+        (error?.data?.code === 'NO_ACTIVE_PAID_PLAN' ||
+          error?.data?.requires_subscription === true)
+      ) {
+        // Do NOT show a generic alert here; let the UI redirect to plans/payment
+        throw error;
+      }
+
+      // Show user-friendly error message for all other errors
+      const errorMessage =
+        error?.message ||
+        'Failed to save property to database. Please check your connection and try again.';
       alert(errorMessage);
       throw error; // Re-throw so UI can show error
     }

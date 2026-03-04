@@ -28,6 +28,7 @@ const SellerProperties = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
+  const [pendingProperty, setPendingProperty] = useState(null);
 
   // Check if user can add property (active paid plan with slots)
   useEffect(() => {
@@ -59,12 +60,20 @@ const SellerProperties = () => {
 
   // Open Add Property form when navigating from payment success
   useEffect(() => {
-    if (location.state?.openAddProperty && canAddProperty && !checkingAccess) {
+    const state = location.state || {};
+
+    // Capture any pending property data passed through navigation (after payment)
+    if (state.pendingProperty) {
+      setPendingProperty(state.pendingProperty);
+    }
+
+    if (state.openAddProperty && canAddProperty && !checkingAccess) {
       setEditIndex(null);
       setShowForm(true);
+      // Clear navigation state so the popup doesn't reopen on refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state?.openAddProperty, canAddProperty, checkingAccess, location.pathname, navigate]);
+  }, [location.state, canAddProperty, checkingAccess, location.pathname, navigate]);
 
   // Filter and sort properties - memoized for performance
   const filteredProperties = useMemo(() => {
@@ -449,9 +458,12 @@ const SellerProperties = () => {
       {/* Add/Edit Form */}
       {showForm && (
         <AddPropertyPopup
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            setPendingProperty(null);
+          }}
           editIndex={editIndex}
-          initialData={editIndex !== null ? properties[editIndex] : null}
+          initialData={editIndex !== null ? properties[editIndex] : pendingProperty}
         />
       )}
 

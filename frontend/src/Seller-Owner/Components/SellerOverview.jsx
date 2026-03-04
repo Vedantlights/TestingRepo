@@ -1,9 +1,8 @@
 // src/pages/SellerOverview.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProperty } from "./PropertyContext";
 import { useAuth } from "../../context/AuthContext";
-import AddPropertyPopup from "./AddPropertyPopup";
 import "../styles/SellerOverview.css";
 
 const MAX_PROPERTIES = 10;
@@ -12,7 +11,6 @@ const SellerOverview = ({ onNavigate }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { properties, inquiries, getStats, refreshProperties, loading, error } = useProperty();
-  const [showPopup, setShowPopup] = useState(false);
 
   const stats = getStats();
 
@@ -46,11 +44,14 @@ const SellerOverview = ({ onNavigate }) => {
   }, [refreshProperties]);
 
   const handleAddProperty = () => {
-    if (properties.length >= MAX_PROPERTIES) {
-      alert(`You can add maximum ${MAX_PROPERTIES} properties.`);
-      return;
-    }
-    setShowPopup(true);
+    // Redirect to Properties page and let it handle subscription checks
+    // and opening the Add Property popup (including payment flow).
+    navigate("/seller-dashboard/properties", {
+      state: {
+        openAddProperty: true,
+        fromOverview: true,
+      },
+    });
   };
 
   const formatPrice = (price) => {
@@ -433,9 +434,6 @@ const SellerOverview = ({ onNavigate }) => {
           </div>
         </div>
       </div>
-
-      {/* Add Property Popup */}
-      {showPopup && <AddPropertyPopup onClose={() => setShowPopup(false)} />}
     </div>
   );
 };

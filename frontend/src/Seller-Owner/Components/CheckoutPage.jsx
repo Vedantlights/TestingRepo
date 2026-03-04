@@ -16,12 +16,15 @@ const PLANS = {
   },
 };
 
-const RAZORPAY_KEY_ID = "rzp_test_SMDn9pa64AbZIb";
+const RAZORPAY_KEY_ID = "rzp_live_SN96SBAqxiyzhV";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const planId = location.state?.planId || "basic_listing";
+
+  const pendingProperty = location.state?.pendingProperty || null;
+  const fromAddProperty = location.state?.fromAddProperty || false;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,6 +76,8 @@ const CheckoutPage = () => {
               razorpay_signature: response.razorpay_signature,
               planId,
               plan,
+              pendingProperty,
+              fromAddProperty,
             },
           });
         },

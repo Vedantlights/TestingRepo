@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendError('Method not allowed', null, 405);
 }
 
-$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: 'G0SvpcWghvo1A2Dz6mFW7RX4';
+$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: '63KcyKUwDuah5rPoV5j70aMq';
 
 // Plan definitions - must match create-order.php
 $plans = [

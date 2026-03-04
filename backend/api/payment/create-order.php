@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Razorpay credentials (use env in production)
-$razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_SMDn9pa64AbZIb';
-$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: 'G0SvpcWghvo1A2Dz6mFW7RX4';
+$razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: 'rzp_live_SN96SBAqxiyzhV';
+$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: '63KcyKUwDuah5rPoV5j70aMq';
 
 $plans = [
     'basic_listing' => ['amount' => 9900, 'name' => 'Basic Plan', 'properties' => 1, 'months' => 1],
