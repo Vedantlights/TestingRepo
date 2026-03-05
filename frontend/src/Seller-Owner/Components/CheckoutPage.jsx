@@ -1,22 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { paymentAPI } from "../../services/api.service";
+import { paymentAPI, plansAPI } from "../../services/api.service";
 import "../styles/CheckoutPage.css";
 
-const PLANS = {
-  basic_listing: {
-    name: "Basic Plan",
-    price: 99,
-    features: ["1 property listing", "1 month validity"],
-  },
-  pro_listing: {
-    name: "Pro Plan",
-    price: 399,
-    features: ["5 property listings", "1 month validity"],
-  },
-};
-
-const RAZORPAY_KEY_ID = "rzp_live_SN96SBAqxiyzhV";
+const RAZORPAY_KEY_ID = "rzp_test_SMDn9pa64AbZIb";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -28,11 +15,58 @@ const CheckoutPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const plan = PLANS[planId] || PLANS.basic_listing;
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState(null);
 
   useEffect(() => {
-    if (!planId || !PLANS[planId]) {
+    const fetchPlans = async () => {
+      try {
+        setPlansLoading(true);
+        setPlansError(null);
+        const response = await plansAPI.list();
+        const backendPlans = response?.data?.plans || [];
+        const mapped = backendPlans.map((p) => {
+          const priceRupees = Math.round((p.price_in_paise || 0) / 100);
+          const properties = p.properties_limit || 0;
+          const months = p.duration_months || 1;
+
+          const features = [
+            `${properties || 0} property listing${properties === 1 ? "" : "s"}`,
+            `${months || 1} month${months === 1 ? "" : "s"} validity`,
+          ];
+
+          return {
+            id: p.code,
+            name: p.name,
+            price: priceRupees,
+            features,
+            raw: p,
+          };
+        });
+        setPlans(mapped);
+      } catch (err) {
+        console.error("Failed to load plans in checkout:", err);
+        setPlansError(
+          err.message ||
+            "Failed to load plan details. Please go back and select a plan again."
+        );
+        setPlans([]);
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const plan = useMemo(() => {
+    if (!plans.length) return null;
+    return plans.find((p) => p.id === planId) || plans[0];
+  }, [plans, planId]);
+
+  useEffect(() => {
+    if (!planId) {
       navigate("/seller-dashboard/plans");
     }
   }, [planId, navigate]);
@@ -56,6 +90,12 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
+      if (plansLoading || !plan) {
+        setError("Plan details are still loading. Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+
       const { data } = await paymentAPI.createOrder(planId);
       const { order_id, key_id, amount } = data;
 

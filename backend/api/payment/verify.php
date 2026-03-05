@@ -61,24 +61,34 @@ try {
     }
     
     $db = getDB();
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Check if already processed (idempotency) - if payment_id column exists
+    // Auto-run migration: ensure plan_type ENUM includes listing types and extra columns exist
     try {
+        $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'plan_type'");
+        $col = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($col && strpos($col['Type'], 'basic_listing') === false) {
+            $db->exec("ALTER TABLE `subscriptions` MODIFY COLUMN `plan_type` ENUM('free','basic','pro','premium','basic_listing','pro_listing') DEFAULT 'free'");
+        }
         $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'payment_id'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $db->prepare("SELECT id FROM subscriptions WHERE user_id = ? AND payment_id = ? LIMIT 1");
-            $stmt->execute([$user['id'], $paymentId]);
-            if ($stmt->fetch()) {
-                sendSuccess('Payment already processed', [
-                    'payment_id' => $paymentId,
-                    'plan_id' => $planId,
-                    'plan_name' => $planId === 'basic_listing' ? 'Basic Plan' : 'Pro Plan',
-                ]);
-                exit;
-            }
+        if ($stmt->rowCount() === 0) {
+            $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `payment_id` VARCHAR(100) NULL DEFAULT NULL AFTER `is_active`");
+            $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `order_id` VARCHAR(100) NULL DEFAULT NULL AFTER `payment_id`");
         }
     } catch (Exception $e) {
-        // Column might not exist, proceed
+        error_log("Verify payment: migration check warning: " . $e->getMessage());
+    }
+    
+    // Check if already processed (idempotency)
+    $stmt = $db->prepare("SELECT id FROM subscriptions WHERE user_id = ? AND payment_id = ? LIMIT 1");
+    $stmt->execute([$user['id'], $paymentId]);
+    if ($stmt->fetch()) {
+        sendSuccess('Payment already processed', [
+            'payment_id' => $paymentId,
+            'plan_id' => $planId,
+            'plan_name' => $planId === 'basic_listing' ? 'Basic Plan' : 'Pro Plan',
+        ]);
+        exit;
     }
     
     // Deactivate previous subscriptions
@@ -89,23 +99,11 @@ try {
     $startDate = date('Y-m-d H:i:s');
     $endDate = date('Y-m-d H:i:s', strtotime("+{$plan['months']} month"));
     
-    // Check if payment_id column exists (migration may not have run)
-    $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'payment_id'");
-    $hasPaymentId = $stmt->rowCount() > 0;
-    
-    if ($hasPaymentId) {
-        $stmt = $db->prepare("
-            INSERT INTO subscriptions (user_id, plan_type, start_date, end_date, is_active, payment_id, order_id, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?, NOW())
-        ");
-        $stmt->execute([$user['id'], $plan['plan_type'], $startDate, $endDate, $paymentId, $orderId]);
-    } else {
-        $stmt = $db->prepare("
-            INSERT INTO subscriptions (user_id, plan_type, start_date, end_date, is_active, created_at)
-            VALUES (?, ?, ?, ?, 1, NOW())
-        ");
-        $stmt->execute([$user['id'], $plan['plan_type'], $startDate, $endDate]);
-    }
+    $stmt = $db->prepare("
+        INSERT INTO subscriptions (user_id, plan_type, start_date, end_date, is_active, payment_id, order_id)
+        VALUES (?, ?, ?, ?, 1, ?, ?)
+    ");
+    $stmt->execute([$user['id'], $plan['plan_type'], $startDate, $endDate, $paymentId, $orderId]);
     
     sendSuccess('Payment verified successfully', [
         'payment_id' => $paymentId,
@@ -116,6 +114,6 @@ try {
     ]);
     
 } catch (Throwable $e) {
-    error_log("Verify payment error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
-    sendError('Payment verification failed. Please try again.', null, 500);
+    error_log("Verify payment error: " . $e->getMessage() . " | Trace: " . $e->getTraceAsString());
+    sendError('Payment verification failed: ' . $e->getMessage(), null, 500);
 }
