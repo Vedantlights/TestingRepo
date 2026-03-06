@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `otp_verifications` (
 CREATE TABLE IF NOT EXISTS `properties` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `user_id` INT(11) NOT NULL,
+  `subscription_id` INT(11) NULL DEFAULT NULL,
   `title` VARCHAR(255) NOT NULL,
   `status` ENUM('sale', 'rent') NOT NULL DEFAULT 'sale',
   `property_type` VARCHAR(100) NOT NULL,
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS `properties` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_user_id` (`user_id`),
+  INDEX `idx_subscription_id` (`subscription_id`),
   INDEX `idx_status` (`status`),
   INDEX `idx_property_type` (`property_type`),
   INDEX `idx_location` (`location`),
@@ -184,6 +186,31 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- PLANS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS `plans` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(50) NOT NULL UNIQUE,
+  `name` VARCHAR(100) NOT NULL,
+  `price_in_paise` INT(11) NOT NULL,
+  `properties_limit` INT(11) NOT NULL DEFAULT 1,
+  `duration_months` INT(11) NOT NULL DEFAULT 1,
+  `features` TEXT DEFAULT NULL,
+  `is_popular` TINYINT(1) DEFAULT 0,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `sort_order` INT(11) DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_code` (`code`),
+  INDEX `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO `plans` (`code`, `name`, `price_in_paise`, `properties_limit`, `duration_months`, `features`, `is_popular`, `sort_order`) VALUES
+('basic_listing', 'Basic Plan', 9900, 1, 1, '["1 property listing", "1 month validity", "Basic visibility"]', 0, 1),
+('pro_listing', 'Pro Plan', 39900, 5, 1, '["5 property listings", "1 month validity", "Priority visibility"]', 1, 2);
 
 -- ============================================
 -- SUBSCRIPTIONS TABLE

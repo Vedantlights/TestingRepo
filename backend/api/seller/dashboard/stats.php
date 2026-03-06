@@ -86,14 +86,69 @@ try {
     $stmt->execute([$user['id']]);
     $recentInquiries = $stmt->fetchAll();
     
-    // Subscription info
-    $stmt = $db->prepare("SELECT plan_type, end_date FROM subscriptions WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
+    // Auto-expire subscriptions that have passed their end_date
+    // Include BOTH: (a) still-active subs past end_date, (b) already-inactive subs past end_date
+    // (b) covers manual DB edits where is_active was set to 0 but properties weren't deactivated)
+    $expireStmt = $db->prepare("SELECT id FROM subscriptions WHERE user_id = ? AND end_date IS NOT NULL AND end_date < NOW()");
+    $expireStmt->execute([$user['id']]);
+    $expiredSubIds = $expireStmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    // Mark still-active expired subs as inactive
+    $db->prepare("UPDATE subscriptions SET is_active = 0 WHERE user_id = ? AND is_active = 1 AND end_date IS NOT NULL AND end_date < NOW()")
+       ->execute([$user['id']]);
+    
+    // Deactivate properties linked to ANY expired subscription (by date), regardless of sub's is_active
+    if (!empty($expiredSubIds)) {
+        $colCheck = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+        if ($colCheck->rowCount() > 0) {
+            $placeholders = implode(',', array_fill(0, count($expiredSubIds), '?'));
+            $deactivateStmt = $db->prepare("UPDATE properties SET is_active = 0 WHERE subscription_id IN ($placeholders) AND is_active = 1");
+            $deactivateStmt->execute($expiredSubIds);
+        }
+    }
+    
+    // Subscription info (join with plans to get properties_limit, only non-expired)
+    $stmt = $db->prepare("
+        SELECT s.id AS subscription_id, s.plan_type, s.start_date, s.end_date,
+               s.properties_limit AS sub_limit, p.properties_limit AS plan_limit
+        FROM subscriptions s
+        LEFT JOIN plans p ON p.code = s.plan_type AND p.is_active = 1
+        WHERE s.user_id = ? AND s.is_active = 1
+          AND (s.end_date IS NULL OR s.end_date > NOW())
+        ORDER BY s.created_at DESC LIMIT 1
+    ");
     $stmt->execute([$user['id']]);
     $subscription = $stmt->fetch();
+    
+    $propertiesLimit = 0;
+    $propertiesInCurrentPlan = 0;
+    if ($subscription) {
+        $propertiesLimit = intval($subscription['sub_limit'] ?? $subscription['plan_limit'] ?? 0);
+        $subId = intval($subscription['subscription_id']);
+        
+        // Count properties linked to this subscription (exact tracking)
+        $colCheck = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+        if ($colCheck->rowCount() > 0) {
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE subscription_id = ?");
+            $stmt->execute([$subId]);
+            $propertiesInCurrentPlan = intval($stmt->fetch()['count']);
+        } else if (!empty($subscription['start_date'])) {
+            // Fallback for pre-migration: count by date range
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE user_id = ? AND created_at >= ?");
+            $stmt->execute([$user['id'], $subscription['start_date']]);
+            $propertiesInCurrentPlan = intval($stmt->fetch()['count']);
+        }
+    }
+    
+    // Count deactivated properties (expired plan)
+    $stmt = $db->prepare("SELECT COUNT(*) as total FROM properties WHERE user_id = ? AND is_active = 0");
+    $stmt->execute([$user['id']]);
+    $expiredProperties = intval($stmt->fetch()['total']);
     
     $stats = [
         'total_properties' => intval($totalProperties),
         'active_properties' => intval($activeProperties),
+        'expired_properties' => $expiredProperties,
         'total_inquiries' => intval($totalInquiries),
         'new_inquiries' => intval($newInquiries),
         'total_views' => intval($totalViews),
@@ -103,9 +158,12 @@ try {
             'rent' => intval($propertiesByStatus['rent'] ?? 0)
         ],
         'recent_inquiries' => $recentInquiries,
+        'properties_in_current_plan' => $propertiesInCurrentPlan,
         'subscription' => $subscription ? [
             'plan_type' => $subscription['plan_type'],
-            'end_date' => $subscription['end_date']
+            'start_date' => $subscription['start_date'],
+            'end_date' => $subscription['end_date'],
+            'properties_limit' => $propertiesLimit
         ] : null
     ];
     

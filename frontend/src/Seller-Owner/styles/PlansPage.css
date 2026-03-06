@@ -75,6 +75,12 @@
   margin-bottom: 1rem;
 }
 
+.plans-gst {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: -0.75rem 0 1rem 0;
+}
+
 .plans-price {
   margin-bottom: 1.25rem;
   display: flex;

@@ -129,22 +129,39 @@ const apiRequest = async (endpoint, options = {}) => {
 // AUTH API
 // =====================
 export const authAPI = {
-  login: async (email, password, userType) => {
-    console.log("authAPI.login called:", { email, userType });
+  login: async (emailOrPhone, password, userType) => {
+    console.log("authAPI.login called:", { emailOrPhone, userType });
     try {
       const response = await apiRequest(API_ENDPOINTS.LOGIN, {
         method: 'POST',
-        body: JSON.stringify({ email, password, userType }),
+        body: JSON.stringify({ emailOrPhone, email: emailOrPhone, password, userType }),
       });
       
       console.log("authAPI.login response:", response);
       
-      // Return response.data only - AuthContext will handle saving to localStorage
       return response;
     } catch (error) {
       console.error("authAPI.login error:", error);
       throw error;
     }
+  },
+
+  loginOtpSend: async (phone) => {
+    const response = await apiRequest(API_ENDPOINTS.LOGIN_OTP_SEND, {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+    return response;
+  },
+
+  loginOtpVerify: async (phone, otp, userType, requestId) => {
+    const body = { phone, otp, userType };
+    if (requestId) body.requestId = requestId;
+    const response = await apiRequest(API_ENDPOINTS.LOGIN_OTP_VERIFY, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response;
   },
   
   register: async (userData) => {
@@ -154,6 +171,22 @@ export const authAPI = {
     });
     
     // Return response only - AuthContext will handle saving to localStorage if needed
+    return response;
+  },
+
+  loginWithGoogle: async (credential, userType) => {
+    const response = await apiRequest(API_ENDPOINTS.LOGIN_GOOGLE, {
+      method: 'POST',
+      body: JSON.stringify({ credential, userType }),
+    });
+    return response;
+  },
+
+  addPhone: async (phone, phoneVerificationToken) => {
+    const response = await apiRequest(API_ENDPOINTS.ADD_PHONE, {
+      method: 'POST',
+      body: JSON.stringify({ phone, phoneVerificationToken }),
+    });
     return response;
   },
   
@@ -231,6 +264,13 @@ export const sellerPropertiesAPI = {
   delete: async (id) => {
     return apiRequest(`${API_ENDPOINTS.SELLER_DELETE_PROPERTY}?id=${id}`, {
       method: 'DELETE',
+    });
+  },
+  
+  activate: async (propertyId) => {
+    return apiRequest(API_ENDPOINTS.SELLER_ACTIVATE_PROPERTY, {
+      method: 'POST',
+      body: JSON.stringify({ property_id: propertyId }),
     });
   },
   
@@ -734,6 +774,24 @@ export const sellerDashboardAPI = {
 };
 
 // =====================
+// PLANS API
+// =====================
+export const plansAPI = {
+  list: async () => {
+    return apiRequest(API_ENDPOINTS.PAYMENT_PLANS, { method: 'GET' });
+  },
+};
+
+// =====================
+// SELLER SUBSCRIPTION API
+// =====================
+export const sellerSubscriptionAPI = {
+  getHistory: async () => {
+    return apiRequest(API_ENDPOINTS.SELLER_SUBSCRIPTION_HISTORY, { method: 'GET' });
+  },
+};
+
+// =====================
 // PAYMENT API (Razorpay)
 // =====================
 export const paymentAPI = {
@@ -1109,6 +1167,7 @@ export default {
   auth: authAPI,
   sellerProperties: sellerPropertiesAPI,
   sellerDashboard: sellerDashboardAPI,
+  sellerSubscription: sellerSubscriptionAPI,
   sellerInquiries: sellerInquiriesAPI,
   sellerLeads: sellerLeadsAPI,
   sellerProfile: sellerProfileAPI,

@@ -239,6 +239,73 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithOTP = async (phone, otp, userType, requestId) => {
+    try {
+      const response = await authAPI.loginOtpVerify(phone, otp, userType, requestId);
+      if (response.success && response.data) {
+        const token = response.data.token;
+        const user = response.data.user;
+        if (token && user) {
+          setToken(token);
+          setUser(user);
+          setIsVerified(true);
+          setVerificationError(null);
+          authAPI.setToken(token);
+          authAPI.setUser(user);
+        }
+      }
+      return response;
+    } catch (error) {
+      console.error("Login with OTP error:", error);
+      return {
+        success: false,
+        message: error.data?.message || error.message || "OTP login failed",
+      };
+    }
+  };
+
+  const loginWithGoogle = async (credential, userType) => {
+    try {
+      const response = await authAPI.loginWithGoogle(credential, userType);
+      if (response.success && response.data) {
+        const token = response.data.token;
+        const user = response.data.user;
+        if (token && user) {
+          setToken(token);
+          setUser(user);
+          setIsVerified(true);
+          setVerificationError(null);
+          authAPI.setToken(token);
+          authAPI.setUser(user);
+        }
+      }
+      return response;
+    } catch (error) {
+      console.error("Login with Google error:", error);
+      return {
+        success: false,
+        message: error.data?.message || error.message || "Google sign-in failed",
+      };
+    }
+  };
+
+  const addPhoneToAccount = async (phone, phoneVerificationToken) => {
+    try {
+      const response = await authAPI.addPhone(phone, phoneVerificationToken);
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
+        authAPI.setUser(response.data.user);
+      }
+      return response;
+    } catch (error) {
+      console.error("Add phone error:", error);
+      return {
+        success: false,
+        message: error.data?.message || error.message || "Failed to add phone",
+      };
+    }
+  };
+
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
@@ -330,6 +397,9 @@ export const AuthProvider = ({ children }) => {
       verificationError, 
       isAuthenticated,
       login, 
+      loginWithOTP,
+      loginWithGoogle,
+      addPhoneToAccount,
       logout, 
       register,
       switchRole,

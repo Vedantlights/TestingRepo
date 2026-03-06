@@ -321,6 +321,38 @@ foreach ($moderationDirs as $dir) {
     }
 }
 
+// Google OAuth (Sign in with Google)
+// Load from .env - set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in backend/.env
+$googleClientId = getenv('GOOGLE_CLIENT_ID');
+$googleClientSecret = getenv('GOOGLE_CLIENT_SECRET');
+if (empty($googleClientId) || empty($googleClientSecret)) {
+    $envPath = dirname(__DIR__) . '/.env';
+    if (file_exists($envPath)) {
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0) continue;
+            if (strpos($line, '=') !== false) {
+                list($key, $val) = explode('=', $line, 2);
+                $key = trim($key);
+                $val = trim($val, " \t\n\r\0\x0B\"'");
+                if ($key === 'GOOGLE_CLIENT_ID' && empty($googleClientId)) { $googleClientId = $val; putenv('GOOGLE_CLIENT_ID=' . $val); }
+                if ($key === 'GOOGLE_CLIENT_SECRET' && empty($googleClientSecret)) { $googleClientSecret = $val; putenv('GOOGLE_CLIENT_SECRET=' . $val); }
+                if ($googleClientId && $googleClientSecret) break;
+            }
+        }
+    }
+    $googleClientId = $googleClientId ?: getenv('GOOGLE_CLIENT_ID');
+    $googleClientSecret = $googleClientSecret ?: getenv('GOOGLE_CLIENT_SECRET');
+}
+if (empty($googleClientId) || empty($googleClientSecret)) {
+    if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
+        error_log('SECURITY: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in backend/.env');
+    }
+}
+define('GOOGLE_CLIENT_ID', $googleClientId ?: '');
+define('GOOGLE_CLIENT_SECRET', $googleClientSecret ?: '');
+
 // Database connection is handled by database.php
 // Use Database::getInstance()->getConnection() or getDB() function
 // 

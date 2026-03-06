@@ -29,13 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Razorpay credentials (use env in production)
-$razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: 'rzp_live_SN96SBAqxiyzhV';
-$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: '63KcyKUwDuah5rPoV5j70aMq';
-
-$plans = [
-    'basic_listing' => ['amount' => 9900, 'name' => 'Basic Plan', 'properties' => 1, 'months' => 1],
-    'pro_listing' => ['amount' => 39900, 'name' => 'Pro Plan', 'properties' => 5, 'months' => 1],
-];
+$razorpayKeyId = getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_SNPPHkAzMW5ydk';
+$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: 'AcIrMqCFSVj3VZ0pO0IiW6cH';
 
 try {
     $user = requireUserType(['seller', 'agent']);
@@ -43,12 +38,23 @@ try {
     $input = json_decode(file_get_contents('php://input'), true);
     $planId = $input['plan_id'] ?? null;
     
-    if (!isset($plans[$planId])) {
-        sendError('Invalid plan. Choose basic_listing or pro_listing.', null, 400);
+    if (empty($planId)) {
+        sendError('Plan ID is required.', null, 400);
     }
     
-    $plan = $plans[$planId];
-    $amount = $plan['amount']; // in paise
+    $db = getDB();
+    $stmt = $db->prepare("SELECT code, name, price_in_paise, properties_limit, duration_months FROM plans WHERE code = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$planId]);
+    $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$plan) {
+        sendError('Invalid or inactive plan.', null, 400);
+    }
+    
+    $baseAmount = intval($plan['price_in_paise']);
+    $gstRate = 18;
+    $gstAmount = intval(round($baseAmount * $gstRate / 100));
+    $amount = $baseAmount + $gstAmount;
     $receipt = 'rcpt_' . $user['id'] . '_' . time();
     
     // Create Razorpay order via API
@@ -58,7 +64,7 @@ try {
         'receipt' => $receipt,
         'payment_capture' => 1,
         'notes' => [
-            'user_id' => (string)$user['id'],
+            'user_id' => (string) $user['id'],
             'plan_id' => $planId,
             'plan_name' => $plan['name'],
         ]
@@ -100,10 +106,17 @@ try {
     sendSuccess('Order created', [
         'order_id' => $order['id'],
         'amount' => $amount,
+        'base_amount' => $baseAmount,
+        'gst_rate' => $gstRate,
+        'gst_amount' => $gstAmount,
         'currency' => $order['currency'] ?? 'INR',
         'key_id' => $razorpayKeyId,
-        'plan' => $plan,
         'plan_id' => $planId,
+        'plan' => [
+            'name' => $plan['name'],
+            'properties' => intval($plan['properties_limit']),
+            'months' => intval($plan['duration_months']),
+        ],
     ]);
     
 } catch (Throwable $e) {

@@ -7,7 +7,7 @@ import SellerOverview from './Components/SellerOverview';
 import SellerProperties from './Components/SellerProperties';
 import SellerInquiries from './Components/SellerInquiries';
 import SellerProfile from './Components/SellerProfile';
-import Subscription from './Components/PlainTimerPage';
+import SubscriptionHistory from './Components/SubscriptionHistory';
 // Use buyer's ViewDetailsPage for all property details (same layout for buyers and sellers)
 import ViewDetailsPage from '../UserDashboard/pages/ViewDetailsPage';
 import SellerContactPage from './Components/SellerContactPage';
@@ -281,8 +281,8 @@ const SellerDashboardContent = () => {
         console.log('👤 Rendering SellerProfile');
         return <SellerProfile />;
       case 'subscription':
-        console.log('💳 Rendering Subscription');
-        return <Subscription />;
+        console.log('💳 Rendering SubscriptionHistory');
+        return <SubscriptionHistory />;
       case 'support':
         console.log('📞 Rendering Support/Contact');
         return <SellerContactPage />;

@@ -17,30 +17,51 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     $input = json_decode(file_get_contents('php://input'), true);
-    $email = sanitizeInput($input['email'] ?? '');
+    $emailOrPhone = sanitizeInput($input['emailOrPhone'] ?? $input['email'] ?? '');
 
-    if (empty($email)) {
-        sendError('Email is required', null, 400);
+    if (empty($emailOrPhone)) {
+        sendError('Email or mobile number is required', null, 400);
     }
 
-    if (!validateEmail($email)) {
-        sendError('Invalid email format', null, 400);
+    $isEmail = validateEmail($emailOrPhone);
+    $validatedPhone = validatePhone($emailOrPhone);
+
+    if (!$isEmail && !$validatedPhone) {
+        sendError('Enter a valid email or mobile number', null, 400);
     }
 
     $db = getDB();
     
-    $stmt = $db->prepare("SELECT id, email, phone FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))");
-    $stmt->execute([$email]);
+    if ($isEmail) {
+        $identifier = strtolower(trim($emailOrPhone));
+        $stmt = $db->prepare("SELECT id, email, phone FROM users WHERE LOWER(TRIM(email)) = ?");
+        $stmt->execute([$identifier]);
+    } else {
+        $identifier = $validatedPhone;
+        $stmt = $db->prepare("SELECT id, email, phone FROM users WHERE phone = ?");
+        $stmt->execute([$identifier]);
+    }
+    
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        sendError('No account found with this email address', null, 404);
+        sendError('No account found with this email or phone number', null, 404);
     }
+
+    // Identifier for MSG91 widget: email or formatted phone (91XXXXXXXXXX for SMS)
+    $widgetIdentifier = $isEmail ? $user['email'] : preg_replace('/\D/', '', $user['phone'] ?? '');
+    if (!$isEmail && strlen($widgetIdentifier) === 10) {
+        $widgetIdentifier = '91' . $widgetIdentifier;
+    }
+    $usedIdentifier = $isEmail ? $user['email'] : ($user['phone'] ?? $identifier);
 
     sendSuccess('Account found. Please verify OTP.', [
         'identifier' => $user['email'],
         'phone' => $user['phone'] ?? null,
-        'hasPhone' => !empty($user['phone'])
+        'hasPhone' => !empty($user['phone']),
+        'widgetIdentifier' => $widgetIdentifier,
+        'usedIdentifier' => $usedIdentifier,
+        'isPhone' => !$isEmail
     ]);
 
 } catch (PDOException $e) {

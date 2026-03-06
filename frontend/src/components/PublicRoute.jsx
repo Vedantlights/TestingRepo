@@ -41,7 +41,10 @@ const PublicRoute = ({ children }) => {
   const isPublicRoute = publicRoutes.some(route => location.pathname === route || location.pathname.toLowerCase() === route);
 
   // If authenticated and NOT on a public route, redirect based on user_type
-  if (isAuthenticated && user && !isPublicRoute) {
+  // Exception: Don't redirect from login/register when pending phone verification (e.g. after Google signup)
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const pendingPhoneVerification = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('pendingPhoneVerification');
+  if (isAuthenticated && user && !isPublicRoute && !(isAuthPage && pendingPhoneVerification)) {
     const userType = user.user_type || user.role;
     
     switch (userType) {

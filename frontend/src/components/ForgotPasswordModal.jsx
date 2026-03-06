@@ -8,8 +8,9 @@ const MSG91_WIDGET_ID = '356c686b6c57353338333631';
 const MSG91_AUTH_TOKEN = '481618TsNUr9hYEGR694e174cP1';
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Password, 4: Success
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState(1); // 1: Email/Phone, 2: OTP, 3: Password, 4: Success
+  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [usedIdentifier, setUsedIdentifier] = useState(''); // email or phone for reset
   const [phone, setPhone] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,7 +25,8 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setEmail('');
+      setEmailOrPhone('');
+      setUsedIdentifier('');
       setPhone('');
       setNewPassword('');
       setConfirmPassword('');
@@ -88,7 +90,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     });
   };
 
-  // Initialize MSG91 Widget
+  // Initialize MSG91 Widget (identifier: email or 91XXXXXXXXXX for phone)
   const initializeMSG91Widget = async (identifier) => {
     if (widgetInitializedRef.current) {
       return;
@@ -169,18 +171,22 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Step 1: Handle email submission
-  const handleEmailSubmit = async (e) => {
+  const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const isPhone = (v) => /^[\d\s+\-()]{10,}$/.test(v.replace(/\D/g, '')) && v.replace(/\D/g, '').length >= 10;
+
+  // Step 1: Handle email or phone submission
+  const handleIdentifierSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!email || !email.trim()) {
-      setError('Please enter your email address');
+    const value = (emailOrPhone || '').trim();
+    if (!value) {
+      setError('Please enter your email or mobile number');
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
+    if (!isEmail(value) && !isPhone(value)) {
+      setError('Please enter a valid email or mobile number');
       return;
     }
 
@@ -192,23 +198,23 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ emailOrPhone: value, email: value }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         setPhone(data.data?.phone || '');
-        setStep(2); // Move to OTP step
+        setUsedIdentifier(data.data?.usedIdentifier || data.data?.identifier || value);
+        setStep(2);
         setError('');
         
-        // Initialize MSG91 widget after a short delay
+        const widgetId = data.data?.widgetIdentifier || value;
         setTimeout(() => {
-          // Use email as identifier (MSG91 supports email OTP)
-          initializeMSG91Widget(email.trim());
+          initializeMSG91Widget(widgetId);
         }, 500);
       } else {
-        setError(data.message || 'Email not found. Please check your email address.');
+        setError(data.message || 'No account found with this email or phone number.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -240,6 +246,9 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
 
     setLoading(true);
 
+    const identifier = usedIdentifier || emailOrPhone;
+    const isEmailReset = identifier.includes('@');
+
     try {
       const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.RESET_PASSWORD}`, {
         method: 'POST',
@@ -247,7 +256,8 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email.trim(),
+          email: isEmailReset ? identifier : '',
+          phone: !isEmailReset ? identifier : '',
           widgetToken: widgetToken,
           newPassword: newPassword,
         }),
@@ -302,19 +312,19 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Step 1: Email Input */}
+          {/* Step 1: Email or Phone Input */}
           {step === 1 && (
-            <form onSubmit={handleEmailSubmit} className="forgot-password-form">
+            <form onSubmit={handleIdentifierSubmit} className="forgot-password-form">
               <p className="forgot-password-description">
-                Enter your email address and we'll send you an OTP to reset your password.
+                Enter your email or mobile number and we&apos;ll send you an OTP to reset your password.
               </p>
               <div className="forgot-password-field">
-                <label>Email Address</label>
+                <label>Email or Mobile Number</label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  type="text"
+                  value={emailOrPhone}
+                  onChange={(e) => setEmailOrPhone(e.target.value)}
+                  placeholder="john@example.com or 9876543210"
                   required
                   disabled={loading}
                 />
@@ -342,7 +352,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
                 className="forgot-password-back-btn"
                 disabled={loading}
               >
-                ← Back to Email
+                ← Back
               </button>
             </div>
           )}

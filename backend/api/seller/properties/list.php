@@ -27,6 +27,24 @@ try {
     $offset = ($page - 1) * $limit;
     $status = isset($_GET['status']) ? sanitizeInput($_GET['status']) : null;
     
+    // Auto-expire subscriptions and deactivate their linked properties
+    // Include subs past end_date regardless of is_active (covers manual DB edits)
+    $expStmt = $db->prepare("SELECT id FROM subscriptions WHERE user_id = ? AND end_date IS NOT NULL AND end_date < NOW()");
+    $expStmt->execute([$user['id']]);
+    $expSubIds = $expStmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $db->prepare("UPDATE subscriptions SET is_active = 0 WHERE user_id = ? AND is_active = 1 AND end_date IS NOT NULL AND end_date < NOW()")
+       ->execute([$user['id']]);
+    
+    if (!empty($expSubIds)) {
+        $colChk = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+        if ($colChk->rowCount() > 0) {
+            $ph = implode(',', array_fill(0, count($expSubIds), '?'));
+            $db->prepare("UPDATE properties SET is_active = 0 WHERE subscription_id IN ($ph) AND is_active = 1")
+               ->execute($expSubIds);
+        }
+    }
+    
     // Simplified query - get properties first, then fetch images separately to avoid GROUP BY issues
     $query = "SELECT p.* FROM properties p WHERE p.user_id = ?";
     $params = [$user['id']];
@@ -199,10 +217,67 @@ try {
         
         $property['price_negotiable'] = (bool)($property['price_negotiable'] ?? false);
         $property['is_active'] = (bool)($property['is_active'] ?? true);
+        
+        // Check if the property's subscription has expired (for "Make Live" prompt)
+        $property['subscription_expired'] = false;
+        if (!$property['is_active'] && !empty($property['subscription_id'])) {
+            try {
+                $subCheckStmt = $db->prepare("SELECT is_active, end_date FROM subscriptions WHERE id = ? LIMIT 1");
+                $subCheckStmt->execute([$property['subscription_id']]);
+                $subRow = $subCheckStmt->fetch(PDO::FETCH_ASSOC);
+                if ($subRow) {
+                    $subActive = (bool)$subRow['is_active'];
+                    $subExpired = $subRow['end_date'] && strtotime($subRow['end_date']) < time();
+                    if (!$subActive || $subExpired) {
+                        $property['subscription_expired'] = true;
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("List properties: subscription check error: " . $e->getMessage());
+            }
+        }
+    }
+    
+    // Check for active subscription (for "Make Live" feature)
+    $activeSubInfo = null;
+    try {
+        $activeSubStmt = $db->prepare("
+            SELECT s.id AS subscription_id, s.plan_type, s.properties_limit AS sub_limit,
+                   s.end_date, p.properties_limit AS plan_limit
+            FROM subscriptions s
+            LEFT JOIN plans p ON p.code = s.plan_type AND p.is_active = 1
+            WHERE s.user_id = ? AND s.is_active = 1
+              AND (s.end_date IS NULL OR s.end_date > NOW())
+            ORDER BY s.created_at DESC LIMIT 1
+        ");
+        $activeSubStmt->execute([$user['id']]);
+        $activeSub = $activeSubStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($activeSub) {
+            $subLimit = intval($activeSub['sub_limit'] ?: $activeSub['plan_limit'] ?: 0);
+            $subId = intval($activeSub['subscription_id']);
+            
+            // Count properties already using this subscription
+            $usedStmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE subscription_id = ? AND is_active = 1");
+            $usedStmt->execute([$subId]);
+            $usedCount = intval($usedStmt->fetch()['count']);
+            
+            $activeSubInfo = [
+                'subscription_id' => $subId,
+                'plan_type' => $activeSub['plan_type'],
+                'properties_limit' => $subLimit,
+                'properties_used' => $usedCount,
+                'slots_available' => max(0, $subLimit - $usedCount),
+                'end_date' => $activeSub['end_date']
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("List properties: active sub check error: " . $e->getMessage());
     }
     
     sendSuccess('Properties retrieved successfully', [
         'properties' => $properties,
+        'active_subscription' => $activeSubInfo,
         'pagination' => [
             'page' => $page,
             'limit' => $limit,

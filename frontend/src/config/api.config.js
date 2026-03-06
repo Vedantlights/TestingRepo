@@ -27,7 +27,11 @@ export const API_BASE_URL = API_URL;
 export const API_ENDPOINTS = {
   // Auth
   LOGIN: '/auth/login.php',
+  LOGIN_OTP_SEND: '/auth/login-otp-send.php',
+  LOGIN_OTP_VERIFY: '/auth/login-otp-verify.php',
   REGISTER: '/auth/register.php',
+  LOGIN_GOOGLE: '/auth/google.php',
+  ADD_PHONE: '/auth/add-phone.php',
   VERIFY_TOKEN: '/auth/verify.php',
   SWITCH_ROLE: '/auth/switch-role.php',
   FORGOT_PASSWORD_INIT: '/auth/forgot-password-init.php',
@@ -38,6 +42,7 @@ export const API_ENDPOINTS = {
   SELLER_ADD_PROPERTY: '/seller/properties/add.php',
   SELLER_UPDATE_PROPERTY: '/seller/properties/update.php',
   SELLER_DELETE_PROPERTY: '/seller/properties/delete.php',
+  SELLER_ACTIVATE_PROPERTY: '/seller/properties/activate.php',
   
   // Seller Dashboard
   SELLER_STATS: '/seller/dashboard/stats.php',
@@ -127,8 +132,12 @@ export const API_ENDPOINTS = {
   CONTACT_SENDMAIL: '/home/sendmail.php',
 
   // Razorpay Payment
+  PAYMENT_PLANS: '/payment/plans.php',
   PAYMENT_CREATE_ORDER: '/payment/create-order.php',
   PAYMENT_VERIFY: '/payment/verify.php',
+
+  // Seller Subscriptions
+  SELLER_SUBSCRIPTION_HISTORY: '/seller/subscriptions/history.php',
 };
 
 export default API_BASE_URL;

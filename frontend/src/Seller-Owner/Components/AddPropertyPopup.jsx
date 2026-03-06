@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProperty } from "./PropertyContext";
-import { sellerPropertiesAPI } from "../../services/api.service";
+import { sellerPropertiesAPI, sellerDashboardAPI } from "../../services/api.service";
 import { API_BASE_URL, API_ENDPOINTS } from "../../config/api.config";
 import {
   sanitizeInput,
@@ -313,10 +313,13 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
   const popupBodyRef = useRef(null);
   const popupContainerRef = useRef(null);
 
-  // Check property limit (3 properties max for free users)
-  const PROPERTY_LIMIT = 3;
-  const currentPropertyCount = properties?.length || 0;
-  const hasReachedLimit = editIndex === null && currentPropertyCount >= PROPERTY_LIMIT;
+  const [propertyLimit, setPropertyLimit] = useState(0);
+  const [propertiesUsedInPlan, setPropertiesUsedInPlan] = useState(0);
+  const [currentPlanType, setCurrentPlanType] = useState(null);
+  const [limitCheckDone, setLimitCheckDone] = useState(editIndex !== null);
+  const hasReachedLimit = editIndex === null && limitCheckDone && (
+    propertyLimit <= 0 || propertiesUsedInPlan >= propertyLimit
+  );
 
   // Check if property is older than 24 hours (only allow title and price editing)
   const isPropertyOlderThan24Hours = () => {
@@ -331,12 +334,42 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
 
   const isRestrictedEdit = isPropertyOlderThan24Hours();
 
-  // Show limit warning if user has reached the limit
   useEffect(() => {
-    if (hasReachedLimit) {
-      setShowLimitWarning(true);
+    if (editIndex !== null) {
+      setLimitCheckDone(true);
+      return;
     }
-  }, [hasReachedLimit]);
+    const fetchPlanLimits = async () => {
+      try {
+        const { data } = await sellerDashboardAPI.getStats();
+        const sub = data?.subscription;
+        const propsInPlan = data?.properties_in_current_plan ?? data?.total_properties ?? properties?.length ?? 0;
+        const endDate = sub?.end_date ? new Date(sub.end_date) : null;
+        const isActive = endDate && endDate > new Date();
+        const limit = sub?.properties_limit ?? 0;
+        const planType = sub?.plan_type || null;
+
+        setCurrentPlanType(planType);
+        setPropertiesUsedInPlan(propsInPlan);
+
+        if (planType && planType !== 'free' && isActive && limit > 0) {
+          setPropertyLimit(limit);
+          if (propsInPlan >= limit) {
+            setShowLimitWarning(true);
+          }
+        } else if (!planType || planType === 'free' || !isActive) {
+          setPropertyLimit(0);
+          setShowLimitWarning(true);
+        }
+      } catch {
+        setPropertyLimit(0);
+        setShowLimitWarning(true);
+      } finally {
+        setLimitCheckDone(true);
+      }
+    };
+    fetchPlanLimits();
+  }, [editIndex, properties?.length]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -1501,9 +1534,22 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         try {
           createdProperty = await addProperty(propertyDataWithoutImages);
         } catch (error) {
-          // If property creation fails, we can't upload images
           console.error('Property creation failed:', error);
-          throw new Error('Failed to create property. Please try again.');
+          if (
+            error?.status === 403 &&
+            (error?.data?.code === 'NO_ACTIVE_PAID_PLAN' || error?.data?.requires_subscription === true)
+          ) {
+            onClose();
+            navigate('/seller-dashboard/plans');
+            return;
+          }
+          if (error?.status === 403) {
+            setShowLimitWarning(true);
+            setIsSubmitting(false);
+            setUploadingImages(false);
+            return;
+          }
+          throw new Error(error?.message || 'Failed to create property. Please try again.');
         }
 
         if (createdProperty && createdProperty.id) {
@@ -3019,21 +3065,27 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
             </div>
 
             <div className="seller-popup-limit-warning-content">
-              <h3>Property Limit Reached</h3>
-              <p>You've uploaded <strong>{currentPropertyCount}</strong> out of <strong>{PROPERTY_LIMIT}</strong> properties allowed in your free plan.</p>
+              <h3>{propertyLimit > 0 ? 'Property Limit Reached' : 'No Active Plan'}</h3>
+              {propertyLimit > 0 ? (
+                <p>You've listed <strong>{propertiesUsedInPlan}</strong> out of <strong>{propertyLimit}</strong> properties allowed in your current plan.</p>
+              ) : (
+                <p>You need an active plan to list properties. Choose a plan to get started.</p>
+              )}
 
-              <div className="seller-popup-limit-progress">
-                <div className="seller-popup-limit-progress-bar">
-                  <div
-                    className="seller-popup-limit-progress-fill"
-                    style={{ width: `${(currentPropertyCount / PROPERTY_LIMIT) * 100}%` }}
-                  ></div>
+              {propertyLimit > 0 && (
+                <div className="seller-popup-limit-progress">
+                  <div className="seller-popup-limit-progress-bar">
+                    <div
+                      className="seller-popup-limit-progress-fill"
+                      style={{ width: `${(propertiesUsedInPlan / propertyLimit) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="seller-popup-limit-progress-text">{propertiesUsedInPlan}/{propertyLimit} Properties Used</span>
                 </div>
-                <span className="seller-popup-limit-progress-text">{currentPropertyCount}/{PROPERTY_LIMIT} Properties Used</span>
-              </div>
+              )}
 
               <div className="seller-popup-limit-warning-features">
-                <p className="seller-popup-features-title">Upgrade to Pro to unlock:</p>
+                <p className="seller-popup-features-title">{propertyLimit > 0 ? 'Upgrade your plan to unlock:' : 'With a plan you get:'}</p>
                 <ul>
                   <li>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -3069,14 +3121,13 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
               </button>
               <button className="seller-popup-limit-btn-primary" onClick={() => {
                 onClose();
-                // Navigate to subscription page - you can pass a callback or use navigate
-                window.location.href = '/subscription';
+                navigate('/seller-dashboard/plans');
               }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" />
                 </svg>
-                Upgrade to Pro
+                {propertyLimit > 0 ? 'Upgrade Plan' : 'Choose a Plan'}
               </button>
             </div>
 
@@ -3142,8 +3193,16 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         </div>
       )}
 
-      {/* Main Popup - Only show if limit not reached, edit notice not shown, and close warning not shown */}
-      {!showLimitWarning && !showEditNoticeModal && !showCloseWarning && (
+      {/* Loading state while checking plan limits */}
+      {!limitCheckDone && !showLimitWarning && !showEditNoticeModal && (
+        <div className="seller-popup-container" style={{ maxWidth: '400px', textAlign: 'center', padding: '3rem 2rem' }}>
+          <div className="seller-popup-spinner" style={{ margin: '0 auto 1rem' }}></div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Checking your plan...</p>
+        </div>
+      )}
+
+      {/* Main Popup - Only show if limit check passed, not reached, and no other modals shown */}
+      {limitCheckDone && !showLimitWarning && !showEditNoticeModal && !showCloseWarning && (
         <div className="seller-popup-container" ref={popupContainerRef} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="seller-popup-header">

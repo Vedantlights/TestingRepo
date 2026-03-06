@@ -13,6 +13,7 @@ export const PropertyProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [inquiries, setInquiries] = useState([]);
+  const [activeSubscription, setActiveSubscription] = useState(null);
 
   // Fetch properties from backend on mount
   useEffect(() => {
@@ -59,11 +60,19 @@ export const PropertyProvider = ({ children }) => {
             brochureUrl: prop.brochure_url,
             seats: prop.seats || '',
             pricePerSeat: prop.price_per_seat?.toString() || '',
-            isActive: prop.is_active !== false
+            isActive: prop.is_active !== false,
+            subscriptionExpired: prop.subscription_expired || false
           }));
 
           // Set only backend data (no demo data)
           setProperties(backendProperties);
+          
+          // Store active subscription info
+          if (response.data.active_subscription) {
+            setActiveSubscription(response.data.active_subscription);
+          } else {
+            setActiveSubscription(null);
+          }
         } else {
           setProperties([]);
         }
@@ -288,10 +297,14 @@ export const PropertyProvider = ({ children }) => {
             brochureUrl: prop.brochure_url,
             seats: prop.seats || '',
             pricePerSeat: prop.price_per_seat?.toString() || '',
-            isActive: prop.is_active !== false
+            isActive: prop.is_active !== false,
+            subscriptionExpired: prop.subscription_expired || false
           }));
           // Set only backend data (no demo data)
           setProperties(backendProperties);
+          if (refreshResponse.data.active_subscription) {
+            setActiveSubscription(refreshResponse.data.active_subscription);
+          }
         } else {
           // If refresh fails, add the new property to state
           setProperties(prev => [newProperty, ...prev]);
@@ -519,6 +532,22 @@ export const PropertyProvider = ({ children }) => {
     };
   };
 
+  // Activate a deactivated property using current active plan
+  const activateProperty = async (propertyId) => {
+    try {
+      const response = await sellerPropertiesAPI.activate(propertyId);
+      if (response.success) {
+        await refreshProperties();
+        return response;
+      } else {
+        throw new Error(response.message || 'Failed to activate property');
+      }
+    } catch (error) {
+      console.error('Error activating property:', error);
+      throw error;
+    }
+  };
+
   // Refresh properties from backend (to get updated views, etc.)
   const refreshProperties = async () => {
     try {
@@ -560,9 +589,16 @@ export const PropertyProvider = ({ children }) => {
           brochureUrl: prop.brochure_url,
           seats: prop.seats || '',
           pricePerSeat: prop.price_per_seat?.toString() || '',
-          isActive: prop.is_active !== false
+          isActive: prop.is_active !== false,
+          subscriptionExpired: prop.subscription_expired || false
         }));
         setProperties(backendProperties);
+        
+        if (response.data.active_subscription) {
+          setActiveSubscription(response.data.active_subscription);
+        } else {
+          setActiveSubscription(null);
+        }
       }
     } catch (error) {
       console.error('Error refreshing properties:', error);
@@ -578,6 +614,8 @@ export const PropertyProvider = ({ children }) => {
       addProperty,
       updateProperty,
       deleteProperty,
+      activateProperty,
+      activeSubscription,
       updateInquiryStatus,
       syncInquiryStatusFromFirebase,
       deleteInquiry,

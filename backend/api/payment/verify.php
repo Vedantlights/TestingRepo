@@ -27,13 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendError('Method not allowed', null, 405);
 }
 
-$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: '63KcyKUwDuah5rPoV5j70aMq';
-
-// Plan definitions - must match create-order.php
-$plans = [
-    'basic_listing' => ['properties' => 1, 'months' => 1, 'plan_type' => 'basic_listing'],
-    'pro_listing' => ['properties' => 5, 'months' => 1, 'plan_type' => 'pro_listing'],
-];
+$razorpayKeySecret = getenv('RAZORPAY_KEY_SECRET') ?: 'AcIrMqCFSVj3VZ0pO0IiW6cH';
 
 try {
     $user = requireUserType(['seller', 'agent']);
@@ -48,12 +42,6 @@ try {
         sendError('Missing payment details', null, 400);
     }
     
-    if (!isset($plans[$planId])) {
-        sendError('Invalid plan', null, 400);
-    }
-    
-    $plan = $plans[$planId];
-    
     // Verify signature: HMAC SHA256(order_id|payment_id, secret)
     $expectedSignature = hash_hmac('sha256', $orderId . '|' . $paymentId, $razorpayKeySecret);
     if (!hash_equals($expectedSignature, $signature)) {
@@ -63,17 +51,39 @@ try {
     $db = getDB();
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Auto-run migration: ensure plan_type ENUM includes listing types and extra columns exist
+    // Fetch plan from DB
+    $stmt = $db->prepare("SELECT id, code, name, properties_limit, duration_months FROM plans WHERE code = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$planId]);
+    $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$plan) {
+        sendError('Invalid or inactive plan', null, 400);
+    }
+    
+    // Auto-run migration: ensure plan_type ENUM includes all active plan codes and extra columns exist
     try {
         $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'plan_type'");
         $col = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($col && strpos($col['Type'], 'basic_listing') === false) {
-            $db->exec("ALTER TABLE `subscriptions` MODIFY COLUMN `plan_type` ENUM('free','basic','pro','premium','basic_listing','pro_listing') DEFAULT 'free'");
+        if ($col && strpos($col['Type'], $planId) === false) {
+            // Build ENUM dynamically from all active plans
+            $allPlans = $db->query("SELECT code FROM plans WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+            $enumValues = array_merge(['free', 'basic', 'pro', 'premium'], $allPlans);
+            $enumValues = array_unique($enumValues);
+            $enumStr = implode("','", $enumValues);
+            $db->exec("ALTER TABLE `subscriptions` MODIFY COLUMN `plan_type` ENUM('{$enumStr}') DEFAULT 'free'");
         }
         $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'payment_id'");
         if ($stmt->rowCount() === 0) {
             $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `payment_id` VARCHAR(100) NULL DEFAULT NULL AFTER `is_active`");
             $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `order_id` VARCHAR(100) NULL DEFAULT NULL AFTER `payment_id`");
+        }
+        $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'plan_id'");
+        if ($stmt->rowCount() === 0) {
+            $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `plan_id` INT(11) NULL DEFAULT NULL AFTER `user_id`");
+        }
+        $stmt = $db->query("SHOW COLUMNS FROM subscriptions LIKE 'properties_limit'");
+        if ($stmt->rowCount() === 0) {
+            $db->exec("ALTER TABLE `subscriptions` ADD COLUMN `properties_limit` INT(11) NOT NULL DEFAULT 1 AFTER `plan_type`");
         }
     } catch (Exception $e) {
         error_log("Verify payment: migration check warning: " . $e->getMessage());
@@ -86,7 +96,7 @@ try {
         sendSuccess('Payment already processed', [
             'payment_id' => $paymentId,
             'plan_id' => $planId,
-            'plan_name' => $planId === 'basic_listing' ? 'Basic Plan' : 'Pro Plan',
+            'plan_name' => $plan['name'],
         ]);
         exit;
     }
@@ -95,21 +105,23 @@ try {
     $stmt = $db->prepare("UPDATE subscriptions SET is_active = 0 WHERE user_id = ?");
     $stmt->execute([$user['id']]);
     
-    // Compute end date
+    // Compute end date (30 days per month)
+    $months = intval($plan['duration_months']);
+    $days = $months * 30;
     $startDate = date('Y-m-d H:i:s');
-    $endDate = date('Y-m-d H:i:s', strtotime("+{$plan['months']} month"));
+    $endDate = date('Y-m-d H:i:s', strtotime("+{$days} days"));
     
     $stmt = $db->prepare("
-        INSERT INTO subscriptions (user_id, plan_type, start_date, end_date, is_active, payment_id, order_id)
-        VALUES (?, ?, ?, ?, 1, ?, ?)
+        INSERT INTO subscriptions (user_id, plan_id, plan_type, properties_limit, start_date, end_date, is_active, payment_id, order_id)
+        VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
     ");
-    $stmt->execute([$user['id'], $plan['plan_type'], $startDate, $endDate, $paymentId, $orderId]);
+    $stmt->execute([$user['id'], $plan['id'], $plan['code'], intval($plan['properties_limit']), $startDate, $endDate, $paymentId, $orderId]);
     
     sendSuccess('Payment verified successfully', [
         'payment_id' => $paymentId,
         'plan_id' => $planId,
-        'plan_name' => $planId === 'basic_listing' ? 'Basic Plan' : 'Pro Plan',
-        'properties_allowed' => $plan['properties'],
+        'plan_name' => $plan['name'],
+        'properties_allowed' => intval($plan['properties_limit']),
         'end_date' => $endDate,
     ]);
     

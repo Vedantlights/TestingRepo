@@ -23,8 +23,7 @@ try {
     
     $db = getDB();
     
-    // Get property details
-    // Use user_full_name from properties for optimization (denormalized), but still join users for other data
+    // First try: active properties only (for buyers and public)
     $stmt = $db->prepare("
         SELECT p.*,
                u.id as seller_id,
@@ -45,6 +44,37 @@ try {
     ");
     $stmt->execute([$propertyId]);
     $property = $stmt->fetch();
+    
+    // If not found and user is seller/agent, allow viewing own inactive property
+    if (!$property) {
+        try {
+            $user = getCurrentUser();
+            if ($user && in_array($user['user_type'] ?? '', ['seller', 'agent'])) {
+                $stmt = $db->prepare("
+                    SELECT p.*,
+                           u.id as seller_id,
+                           u.user_type as seller_user_type,
+                           COALESCE(p.user_full_name, u.full_name) as seller_name,
+                           u.email as seller_email,
+                           u.phone as seller_phone,
+                           up.profile_image as seller_profile_image,
+                           GROUP_CONCAT(DISTINCT pi.image_url ORDER BY pi.image_order) as images,
+                           GROUP_CONCAT(DISTINCT pa.amenity_id) as amenities
+                    FROM properties p
+                    INNER JOIN users u ON p.user_id = u.id
+                    LEFT JOIN user_profiles up ON u.id = up.user_id
+                    LEFT JOIN property_images pi ON p.id = pi.property_id
+                    LEFT JOIN property_amenities pa ON p.id = pa.property_id
+                    WHERE p.id = ? AND p.user_id = ?
+                    GROUP BY p.id
+                ");
+                $stmt->execute([$propertyId, $user['user_id']]);
+                $property = $stmt->fetch();
+            }
+        } catch (Exception $e) {
+            // User not authenticated, that's fine - property stays null
+        }
+    }
     
     if (!$property) {
         sendError('Property not found', null, 404);

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { User, Building2, Home } from "lucide-react";
 import { otpAPI, publicConfigAPI } from "../../services/api.service";
-import { useAuth } from "../../context/AuthContext"; // ✅ ADDED
+import { useAuth } from "../../context/AuthContext";
+import AddMobileModal from "../../components/AddMobileModal";
+import GoogleSignInButton from "../../components/GoogleSignInButton";
 import "../styles/Register.css";
 
 // MSG91 Widget Configuration (SMS Verification Widget)
@@ -16,14 +18,14 @@ const MSG91_EMAIL_AUTH_TOKEN = "481618TX6cdMp7Eg69414e7eP1"; // Token ID
 const Register = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register: registerUser } = useAuth(); // ✅ ADDED
+  const { register: registerUser, loginWithGoogle, addPhoneToAccount } = useAuth();
 
   // Get role from URL query parameter, default to "buyer"
   const roleFromUrl = searchParams.get("role");
-  const initialUserType = roleFromUrl && ["buyer", "seller", "agent"].includes(roleFromUrl) 
-    ? roleFromUrl 
+  const initialUserType = roleFromUrl && ["buyer", "seller", "agent"].includes(roleFromUrl)
+    ? roleFromUrl
     : "buyer";
-  
+
   // Get returnUrl from query parameter to redirect back after registration
   const initialReturnUrl = searchParams.get("returnUrl");
 
@@ -34,11 +36,11 @@ const Register = () => {
   useEffect(() => {
     const roleFromUrl = searchParams.get("role");
     const returnUrlFromParams = searchParams.get("returnUrl");
-    
+
     if (roleFromUrl && ["buyer", "seller", "agent"].includes(roleFromUrl)) {
       setUserType(roleFromUrl);
     }
-    
+
     if (returnUrlFromParams) {
       setReturnUrl(returnUrlFromParams);
       // Store in localStorage as backup
@@ -63,11 +65,11 @@ const Register = () => {
     // Store original overflow values
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
-    
+
     // Prevent scrolling on body and html
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
-    
+
     // Cleanup: restore original overflow values when component unmounts
     return () => {
       document.body.style.overflow = originalBodyOverflow;
@@ -97,7 +99,10 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [emailOtpEnabled, setEmailOtpEnabled] = useState(false); // Default to false to match backend default
+  const [emailOtpEnabled, setEmailOtpEnabled] = useState(false);
+  const [showAddMobileModal, setShowAddMobileModal] = useState(false);
+  const [isGoogleSignupNeedsPhone, setIsGoogleSignupNeedsPhone] = useState(false); // true when new Google signup
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Check if email OTP is enabled on component mount
   useEffect(() => {
@@ -108,7 +113,7 @@ const Register = () => {
         if (response && response.success && response.data) {
           const enabled = response.data.enableEmailOtp === true; // Explicitly check for true
           setEmailOtpEnabled(enabled);
-          
+
           // If email OTP is disabled, auto-verify email
           if (!enabled) {
             setEmailVerified(true);
@@ -130,15 +135,15 @@ const Register = () => {
         setEmailOtpSent(true);
       }
     };
-    
+
     checkEmailOtpStatus();
   }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     // Convert fullName to uppercase, but keep email as is
-    const processedValue = (name === 'fullName' && type !== 'checkbox') 
-      ? value.toUpperCase() 
+    const processedValue = (name === 'fullName' && type !== 'checkbox')
+      ? value.toUpperCase()
       : (type === "checkbox" ? checked : value);
     setFormData((prev) => ({
       ...prev,
@@ -184,11 +189,11 @@ const Register = () => {
         success: (data) => {
           // Widget verification successful
           console.log("MSG91 Email Verification Success:", data);
-          
+
           // Store verification token
           // MSG91 returns token in different formats, handle all cases
           let verificationToken = null;
-          
+
           if (typeof data === 'string') {
             // If data is already a string, use it
             verificationToken = data;
@@ -205,7 +210,7 @@ const Register = () => {
             // Fallback: stringify the entire data object
             verificationToken = JSON.stringify(data);
           }
-          
+
           console.log("Stored email verification token:", verificationToken);
           setEmailVerificationToken(verificationToken);
           setEmailVerified(true);
@@ -221,7 +226,7 @@ const Register = () => {
           setEmailVerificationToken(null);
         },
       };
-      
+
       window.initSendOTP(configuration);
     } catch (error) {
       console.error("Error opening MSG91 email widget:", error);
@@ -287,11 +292,11 @@ const Register = () => {
         success: (data) => {
           // Widget verification successful
           console.log("MSG91 Verification Success:", data);
-          
+
           // Store verification token
           // MSG91 returns token in different formats, handle all cases
           let verificationToken = null;
-          
+
           if (typeof data === 'string') {
             // If data is already a string, use it
             verificationToken = data;
@@ -308,7 +313,7 @@ const Register = () => {
             // Fallback: stringify the entire data object
             verificationToken = JSON.stringify(data);
           }
-          
+
           console.log("Stored verification token:", verificationToken);
           setPhoneVerificationToken(verificationToken);
           setPhoneVerified(true);
@@ -324,7 +329,7 @@ const Register = () => {
           setPhoneVerificationToken(null);
         },
       };
-      
+
       window.initSendOTP(configuration);
     } catch (error) {
       console.error("Error opening MSG91 widget:", error);
@@ -337,7 +342,7 @@ const Register = () => {
     if (e) {
       e.preventDefault();
     }
-    
+
     // Prevent double submission
     if (isLoading) {
       return;
@@ -443,7 +448,7 @@ const Register = () => {
       if (response.success) {
         // ✅ CHANGED: Show welcome message
         setSuccess(`Registration successful! Welcome, ${formData.fullName}!`);
-        
+
         // ✅ ADDED: Store current session
         localStorage.setItem(
           "currentSession",
@@ -457,12 +462,12 @@ const Register = () => {
         console.log("✅ Registration successful - Auto-logged in!");
         console.log("Current returnUrl state:", returnUrl);
         console.log("Current returnUrl from searchParams:", searchParams.get("returnUrl"));
-        
+
         // ✅ CHANGED: Redirect to returnUrl if provided, otherwise navigate to dashboard
         setTimeout(() => {
           // Get returnUrl from state, searchParams, or localStorage (fallback chain)
           const redirectUrl = returnUrl || searchParams.get("returnUrl") || localStorage.getItem("returnUrl");
-          
+
           if (redirectUrl) {
             try {
               const decodedUrl = decodeURIComponent(redirectUrl);
@@ -571,11 +576,61 @@ const Register = () => {
     setUserType(type);
   };
 
+  const navigateToDashboard = () => {
+    const redirectUrl = returnUrl || searchParams.get("returnUrl") || localStorage.getItem("returnUrl");
+    if (redirectUrl) {
+      try {
+        const decodedUrl = decodeURIComponent(redirectUrl);
+        if (decodedUrl.startsWith("/")) {
+          localStorage.removeItem("returnUrl");
+          navigate(decodedUrl, { replace: false });
+          return;
+        }
+      } catch (e) {
+        console.error("Error decoding returnUrl:", e);
+      }
+    }
+    if (userType === "buyer") navigate("/buyer-dashboard");
+    else if (userType === "seller") navigate("/seller-dashboard");
+    else navigate("/agent-dashboard");
+  };
+
+  const handleGoogleSuccess = async (credential) => {
+    setError("");
+    setIsGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle(credential, userType);
+      if (result?.success && result?.data) {
+        localStorage.setItem(
+          "currentSession",
+          JSON.stringify({
+            email: result.data.user?.email,
+            loginType: userType,
+            loginTime: new Date().toISOString(),
+          })
+        );
+        if (result.data.needsPhone) {
+          sessionStorage.setItem('pendingPhoneVerification', '1');
+          setIsGoogleSignupNeedsPhone(result.data.isNewUser ?? false);
+          setShowAddMobileModal(true);
+        } else {
+          setTimeout(navigateToDashboard, 100);
+        }
+      } else {
+        setError(result?.message || "Google sign-up failed.");
+      }
+    } catch (err) {
+      setError(err?.message || "Google sign-up failed.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   // Handle ENTER key to move to next input or submit form
   const handleKeyDown = (e, currentFieldName) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      
+
       // Get all input fields in order (excluding disabled/verified fields)
       const inputFields = [
         "fullName",
@@ -584,9 +639,9 @@ const Register = () => {
         "password",
         "confirmPassword"
       ];
-      
+
       const currentIndex = inputFields.indexOf(currentFieldName);
-      
+
       if (currentIndex < inputFields.length - 1) {
         // Move to next input field
         const nextFieldName = inputFields[currentIndex + 1];
@@ -613,7 +668,7 @@ const Register = () => {
 
   return (
     <div className="container">
-      <div 
+      <div
         className="background-image"
         style={{
           backgroundImage: `url(${backgroundImages[userType]})`,
@@ -675,19 +730,19 @@ const Register = () => {
             <div className="role-info">
               {userType === "buyer" && (
                 <p className="role-hint">
-                  
+
                   As a Buyer/Tenant, you can access Buyer and Seller dashboards
                 </p>
               )}
               {userType === "seller" && (
                 <p className="role-hint">
-                  
+
                   As a Seller/Owner, you can access Buyer and Seller dashboards
                 </p>
               )}
               {userType === "agent" && (
                 <p className="role-hint role-hint-agent">
-                
+
                   As an Agent/Builder, you can only access the Agent dashboard
                 </p>
               )}
@@ -867,19 +922,52 @@ const Register = () => {
           </div>
 
           {/* Register Button */}
-          <button 
+          <button
             type="submit"
-            className="register-btn" 
+            className="register-btn"
             disabled={isLoading}
           >
             {isLoading ? "Registering..." : `Register as ${getUserTypeLabel(userType)}`}
           </button>
 
+          {/* Google Sign Up */}
+          <div className="register-divider">
+            <span>or</span>
+          </div>
+          <div className="google-signin-wrapper">
+            <GoogleSignInButton
+              userType={userType}
+              onSuccess={handleGoogleSuccess}
+              onError={(err) => setError(err?.message || "Google sign-up failed.")}
+              disabled={isGoogleLoading}
+            />
+            <p className="google-legal-hint">
+              By continuing with Google, you agree to our{" "}
+              <a href="terms-conditions" className="link">Terms</a>
+              {" "}and{" "}
+              <a href="./privacy-policy" className="link">Privacy Policy</a>.
+            </p>
+          </div>
+
+          {/* Add Mobile Modal (after Google signup - verify mobile required for new signups) */}
+          <AddMobileModal
+            isOpen={showAddMobileModal}
+            onClose={() => {
+              sessionStorage.removeItem('pendingPhoneVerification');
+              setShowAddMobileModal(false);
+              setIsGoogleSignupNeedsPhone(false);
+              navigateToDashboard();
+            }}
+            onSuccess={async (phone, token) => addPhoneToAccount(phone, token)}
+            onSkip={() => navigateToDashboard()}
+            isSignup={isGoogleSignupNeedsPhone}
+          />
+
           {/* Login Link */}
           <p className="login-link">
             Already have an account?{" "}
             <button type="button" className="link-btn" onClick={() => {
-              const loginUrl = returnUrl 
+              const loginUrl = returnUrl
                 ? `/login?role=${userType}&returnUrl=${encodeURIComponent(returnUrl)}`
                 : `/login?role=${userType}`;
               navigate(loginUrl);

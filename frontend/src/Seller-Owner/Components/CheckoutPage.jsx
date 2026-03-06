@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { paymentAPI, plansAPI } from "../../services/api.service";
 import "../styles/CheckoutPage.css";
-
-const RAZORPAY_KEY_ID = "rzp_test_SMDn9pa64AbZIb";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -15,60 +13,42 @@ const CheckoutPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [plans, setPlans] = useState([]);
-  const [plansLoading, setPlansLoading] = useState(true);
-  const [plansError, setPlansError] = useState(null);
-
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        setPlansLoading(true);
-        setPlansError(null);
-        const response = await plansAPI.list();
-        const backendPlans = response?.data?.plans || [];
-        const mapped = backendPlans.map((p) => {
-          const priceRupees = Math.round((p.price_in_paise || 0) / 100);
-          const properties = p.properties_limit || 0;
-          const months = p.duration_months || 1;
-
-          const features = [
-            `${properties || 0} property listing${properties === 1 ? "" : "s"}`,
-            `${months || 1} month${months === 1 ? "" : "s"} validity`,
-          ];
-
-          return {
-            id: p.code,
-            name: p.name,
-            price: priceRupees,
-            features,
-            raw: p,
-          };
-        });
-        setPlans(mapped);
-      } catch (err) {
-        console.error("Failed to load plans in checkout:", err);
-        setPlansError(
-          err.message ||
-            "Failed to load plan details. Please go back and select a plan again."
-        );
-        setPlans([]);
-      } finally {
-        setPlansLoading(false);
-      }
-    };
-
-    fetchPlans();
-  }, []);
-
-  const plan = useMemo(() => {
-    if (!plans.length) return null;
-    return plans.find((p) => p.id === planId) || plans[0];
-  }, [plans, planId]);
+  const [plan, setPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(true);
 
   useEffect(() => {
     if (!planId) {
       navigate("/seller-dashboard/plans");
+      return;
     }
+
+    const fetchPlan = async () => {
+      try {
+        const response = await plansAPI.list();
+        const backendPlans = response?.data?.plans || [];
+        const matched = backendPlans.find((p) => p.code === planId);
+        if (!matched) {
+          navigate("/seller-dashboard/plans");
+          return;
+        }
+        const basePrice = Math.round((matched.price_in_paise || 0) / 100);
+        const gstAmount = Math.round(basePrice * 0.18);
+        const totalPrice = basePrice + gstAmount;
+        setPlan({
+          name: matched.name,
+          basePrice,
+          gstAmount,
+          price: totalPrice,
+          features: matched.features || [],
+        });
+      } catch (err) {
+        console.error("Failed to load plan:", err);
+        setError("Failed to load plan details. Please go back and try again.");
+      } finally {
+        setPlanLoading(false);
+      }
+    };
+    fetchPlan();
   }, [planId, navigate]);
 
   const loadRazorpayScript = () => {
@@ -90,8 +70,8 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      if (plansLoading || !plan) {
-        setError("Plan details are still loading. Please wait a moment.");
+      if (planLoading || !plan) {
+        setError("Plan details are still loading. Please wait.");
         setLoading(false);
         return;
       }
@@ -142,6 +122,31 @@ const CheckoutPage = () => {
     }
   };
 
+  if (planLoading) {
+    return (
+      <div className="checkout-page">
+        <div className="checkout-container">
+          <p style={{ textAlign: "center", padding: "2rem" }}>Loading plan details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!plan) {
+    return (
+      <div className="checkout-page">
+        <div className="checkout-container">
+          <p style={{ textAlign: "center", padding: "2rem", color: "#ef4444" }}>
+            {error || "Plan not found."}
+          </p>
+          <button style={{ display: "block", margin: "0 auto" }} onClick={() => navigate("/seller-dashboard/plans")}>
+            Back to Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="checkout-page">
       <div className="checkout-container">
@@ -162,6 +167,15 @@ const CheckoutPage = () => {
               <span className="checkout-features">
                 {plan.features.join(" • ")}
               </span>
+            </div>
+            <div className="checkout-divider" />
+            <div className="checkout-row">
+              <span>Base Price</span>
+              <span className="checkout-value">₹{plan.basePrice}</span>
+            </div>
+            <div className="checkout-row">
+              <span>GST (18%)</span>
+              <span className="checkout-value">₹{plan.gstAmount}</span>
             </div>
             <div className="checkout-divider" />
             <div className="checkout-row checkout-total">

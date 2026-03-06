@@ -87,16 +87,21 @@ error_log("Step 7: Starting login processing");
 try {
     $input = json_decode(file_get_contents('php://input'), true);
     
-    $email = sanitizeInput($input['email'] ?? '');
+    // Accept either 'email' (legacy) or 'emailOrPhone' for unified input
+    $emailOrPhone = sanitizeInput($input['emailOrPhone'] ?? $input['email'] ?? '');
     $password = $input['password'] ?? '';
     $userType = sanitizeInput($input['userType'] ?? 'buyer');
     
     // Validation
     $errors = [];
-    if (empty($email)) {
-        $errors['email'] = 'Email is required';
-    } elseif (!validateEmail($email)) {
-        $errors['email'] = 'Invalid email format';
+    if (empty($emailOrPhone)) {
+        $errors['emailOrPhone'] = 'Email or mobile number is required';
+    } else {
+        $isEmail = validateEmail($emailOrPhone);
+        $validatedPhone = validatePhone($emailOrPhone);
+        if (!$isEmail && !$validatedPhone) {
+            $errors['emailOrPhone'] = 'Enter a valid email or mobile number';
+        }
     }
     
     if (empty($password)) {
@@ -114,34 +119,53 @@ try {
     // Get database connection
     $db = getDB();
     
-    // Normalize email (lowercase, trim) - same as registration
-    $emailNormalized = strtolower(trim($email));
+    // Determine lookup: by email or by phone
+    $isEmail = validateEmail($emailOrPhone);
+    $user = null;
     
-    // profile_image is in user_profiles table, not users table
-    // Always join with user_profiles to get profile_image
-    $stmt = $db->prepare("
-        SELECT u.id, u.full_name, u.email, u.phone, u.password, u.user_type, u.email_verified, u.phone_verified,
-               up.profile_image
-        FROM users u
-        LEFT JOIN user_profiles up ON u.id = up.user_id
-        WHERE LOWER(TRIM(u.email)) = ?
-    ");
-    
-    $stmt->execute([$emailNormalized]);
-    $user = $stmt->fetch();
+    if ($isEmail) {
+        $identifier = strtolower(trim($emailOrPhone));
+        $stmt = $db->prepare("
+            SELECT u.id, u.full_name, u.email, u.phone, u.password, u.user_type, u.email_verified, u.phone_verified,
+                   up.profile_image
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            WHERE LOWER(TRIM(u.email)) = ?
+        ");
+        $stmt->execute([$identifier]);
+        $user = $stmt->fetch();
+    } else {
+        $validatedPhone = validatePhone($emailOrPhone);
+        $identifier = $validatedPhone;
+        $stmt = $db->prepare("
+            SELECT u.id, u.full_name, u.email, u.phone, u.password, u.user_type, u.email_verified, u.phone_verified,
+                   up.profile_image
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            WHERE u.phone = ?
+        ");
+        $stmt->execute([$identifier]);
+        $user = $stmt->fetch();
+    }
     
     if (!$user) {
-        error_log("Login failed: User not found for email: $emailNormalized");
+        error_log("Login failed: User not found for identifier: " . ($identifier ?? $emailOrPhone));
         sendError('Invalid email or password', null, 401);
+    }
+
+    // Block Google/OTP-only users from password login
+    if (empty($user['password'])) {
+        error_log("Login failed: User has no password (Google/OTP account): " . ($user['email'] ?? $user['phone'] ?? 'unknown'));
+        sendError('This account uses Google or OTP login. Please use the appropriate login option.', null, 401);
     }
     
     // Verify password
     if (!password_verify($password, $user['password'])) {
-        error_log("Login failed: Password mismatch for email: $emailNormalized");
+        error_log("Login failed: Password mismatch for identifier: " . ($user['email'] ?? $user['phone'] ?? 'unknown'));
         sendError('Invalid email or password', null, 401);
     }
     
-    error_log("Login successful for email: $emailNormalized, user_type: {$user['user_type']}");
+    error_log("Login successful for: " . ($user['email'] ?? $user['phone']) . ", user_type: {$user['user_type']}");
     
     // Check if user can login with selected user type
     $registeredType = $user['user_type'];

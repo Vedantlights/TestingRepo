@@ -1,0 +1,161 @@
+.add-mobile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: addMobileFadeIn 0.2s ease-in-out;
+}
+
+@keyframes addMobileFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.add-mobile-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: addMobileSlideUp 0.3s ease-out;
+}
+
+@keyframes addMobileSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.add-mobile-modal-header {
+  margin-bottom: 20px;
+}
+
+.add-mobile-modal-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.add-mobile-modal-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.add-mobile-modal-body {
+  margin-bottom: 20px;
+}
+
+.add-mobile-error {
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.add-mobile-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.add-mobile-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.add-mobile-input-row input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.add-mobile-input-row input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.add-mobile-input-row input:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.add-mobile-input-row button {
+  padding: 12px 20px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.add-mobile-input-row button:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.add-mobile-input-row button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.add-mobile-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-mobile-skip {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-mobile-skip:hover {
+  color: #374151;
+}
+
+.add-mobile-submit {
+  padding: 12px 24px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.add-mobile-submit:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.add-mobile-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}

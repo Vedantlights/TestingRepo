@@ -31,24 +31,73 @@ try {
     // SELLERS: Check property limit based on subscription
     $db = getDB();
     
-    // Only check limits for sellers, not agents
-    if ($user['user_type'] === 'seller') {
-        $planType = 'free'; // Default
+    // Determine effective user type: database user_type may be 'buyer' if user
+    // registered as buyer but switched role to seller. Check token's user_type too.
+    $effectiveUserType = strtolower($user['user_type'] ?? '');
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+    if (empty($authHeader) && function_exists('getallheaders')) {
+        $hdrs = getallheaders();
+        $authHeader = $hdrs['Authorization'] ?? $hdrs['authorization'] ?? null;
+    }
+    if (!empty($authHeader) && preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) {
+        $tokenPayload = verifyToken($m[1]);
+        if ($tokenPayload && !empty($tokenPayload['user_type'])) {
+            $tokenType = strtolower(trim($tokenPayload['user_type']));
+            if (in_array($tokenType, ['seller', 'agent'])) {
+                $effectiveUserType = $tokenType;
+            }
+        }
+    }
+    
+    $activeSubscriptionId = null;
+    
+    if ($effectiveUserType === 'seller') {
+        $planType = 'free';
         $hasPaidPlan = false;
+        $subscriptionLimit = 0;
         try {
-            // Check if subscriptions table exists
             $checkStmt = $db->query("SHOW TABLES LIKE 'subscriptions'");
             if ($checkStmt->rowCount() > 0) {
-                $stmt = $db->prepare("SELECT plan_type FROM subscriptions WHERE user_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
+                // Auto-expire subscriptions and deactivate their linked properties
+                // Include subs past end_date regardless of is_active (covers manual DB edits)
+                $expStmt = $db->prepare("SELECT id FROM subscriptions WHERE user_id = ? AND end_date IS NOT NULL AND end_date < NOW()");
+                $expStmt->execute([$user['id']]);
+                $expSubIds = $expStmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                $db->prepare("UPDATE subscriptions SET is_active = 0 WHERE user_id = ? AND is_active = 1 AND end_date IS NOT NULL AND end_date < NOW()")
+                   ->execute([$user['id']]);
+                
+                if (!empty($expSubIds)) {
+                    $colChk = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+                    if ($colChk->rowCount() > 0) {
+                        $ph = implode(',', array_fill(0, count($expSubIds), '?'));
+                        $db->prepare("UPDATE properties SET is_active = 0 WHERE subscription_id IN ($ph) AND is_active = 1")
+                           ->execute($expSubIds);
+                    }
+                }
+                
+                // Fetch the active, non-expired subscription (include s.id)
+                $stmt = $db->prepare("
+                    SELECT s.id AS subscription_id, s.plan_type, s.properties_limit AS sub_limit,
+                           p.properties_limit AS plan_limit
+                    FROM subscriptions s
+                    LEFT JOIN plans p ON p.code = s.plan_type AND p.is_active = 1
+                    WHERE s.user_id = ? AND s.is_active = 1
+                      AND (s.end_date IS NULL OR s.end_date > NOW())
+                    ORDER BY s.created_at DESC LIMIT 1
+                ");
                 $stmt->execute([$user['id']]);
-                $subscription = $stmt->fetch();
-                $planType = $subscription['plan_type'] ?? 'free';
-                if ($planType !== 'free') {
-                    $hasPaidPlan = true;
+                $subscription = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($subscription) {
+                    $activeSubscriptionId = intval($subscription['subscription_id']);
+                    $planType = $subscription['plan_type'] ?? 'free';
+                    $subscriptionLimit = intval($subscription['sub_limit'] ?: $subscription['plan_limit'] ?: 0);
+                    if ($planType !== 'free') {
+                        $hasPaidPlan = true;
+                    }
                 }
             }
         } catch (Exception $e) {
-            // Table doesn't exist or error, use default
             error_log("Add Property: Subscriptions table check failed: " . $e->getMessage());
             $planType = 'free';
             $hasPaidPlan = false;
@@ -56,37 +105,62 @@ try {
         
         // Require an active paid plan for sellers
         if (!$hasPaidPlan) {
-            // Frontend can use "code" to detect this specific case
-            // and redirect the user to the payment / plans UI.
+            $allowedPlanCodes = [];
+            try {
+                $checkPlans = $db->query("SHOW TABLES LIKE 'plans'");
+                if ($checkPlans->rowCount() > 0) {
+                    $allowedPlanCodes = $db->query("SELECT code FROM plans WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+                }
+            } catch (Exception $e) {
+                $allowedPlanCodes = ['basic_listing', 'pro_listing'];
+            }
+            
             sendError(
                 'You need an active listing package to add properties. Please purchase a plan.',
                 [
                     'code' => 'NO_ACTIVE_PAID_PLAN',
                     'requires_subscription' => true,
-                    'allowed_plans' => ['basic_listing', 'pro_listing'],
+                    'allowed_plans' => $allowedPlanCodes,
                     'user_type' => $user['user_type'],
                 ],
                 403
             );
         }
         
-        // Get current property count
-        $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE user_id = ?");
-        $stmt->execute([$user['id']]);
-        $countResult = $stmt->fetch();
-        $currentCount = $countResult['count'];
+        // Count properties linked to this subscription
+        $currentCount = 0;
+        if ($activeSubscriptionId) {
+            // Check if subscription_id column exists on properties table
+            $colCheck = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+            if ($colCheck->rowCount() > 0) {
+                $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE subscription_id = ?");
+                $stmt->execute([$activeSubscriptionId]);
+            } else {
+                // Fallback: count all properties for this user (pre-migration)
+                $stmt = $db->prepare("SELECT COUNT(*) as count FROM properties WHERE user_id = ?");
+                $stmt->execute([$user['id']]);
+            }
+            $currentCount = intval($stmt->fetch()['count']);
+        }
         
-        // Check limit
-        $limits = [
-            'free' => FREE_PLAN_PROPERTY_LIMIT,
-            'basic' => BASIC_PLAN_PROPERTY_LIMIT,
-            'pro' => PRO_PLAN_PROPERTY_LIMIT,
-            'premium' => PREMIUM_PLAN_PROPERTY_LIMIT,
-            'basic_listing' => defined('BASIC_LISTING_PROPERTY_LIMIT') ? BASIC_LISTING_PROPERTY_LIMIT : 1,
-            'pro_listing' => defined('PRO_LISTING_PROPERTY_LIMIT') ? PRO_LISTING_PROPERTY_LIMIT : 5,
-        ];
+        // Use the limit from the subscription record (denormalized), fall back to plans table
+        $limit = $subscriptionLimit;
+        if ($limit <= 0) {
+            try {
+                $checkPlans = $db->query("SHOW TABLES LIKE 'plans'");
+                if ($checkPlans->rowCount() > 0) {
+                    $limitStmt = $db->prepare("SELECT properties_limit FROM plans WHERE code = ? AND is_active = 1 LIMIT 1");
+                    $limitStmt->execute([$planType]);
+                    $planRow = $limitStmt->fetch(PDO::FETCH_ASSOC);
+                    if ($planRow) {
+                        $limit = intval($planRow['properties_limit']);
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Add Property: Failed to read plan limit from DB: " . $e->getMessage());
+            }
+        }
         
-        $limit = $limits[$planType] ?? FREE_PLAN_PROPERTY_LIMIT;
         if ($limit > 0 && $currentCount >= $limit) {
             sendError("Property limit reached. You can list up to $limit properties in your current plan. Please upgrade to add more.", null, 403);
         }
@@ -363,6 +437,25 @@ try {
     //     sendError('At least one image is required', null, 400);
     // }
     
+    // Auto-add subscription_id column BEFORE transaction (DDL causes implicit commit)
+    $hasSubscriptionIdCol = false;
+    try {
+        $colCheck = $db->query("SHOW COLUMNS FROM properties LIKE 'subscription_id'");
+        $hasSubscriptionIdCol = $colCheck->rowCount() > 0;
+        if (!$hasSubscriptionIdCol) {
+            $db->exec("ALTER TABLE `properties` ADD COLUMN `subscription_id` INT(11) NULL DEFAULT NULL AFTER `user_id`, ADD INDEX `idx_subscription_id` (`subscription_id`)");
+            $hasSubscriptionIdCol = true;
+        }
+    } catch (Exception $e) {
+        error_log("Add Property: subscription_id migration warning: " . $e->getMessage());
+    }
+    
+    // Check schema columns BEFORE transaction
+    $checkProjectType = $db->query("SHOW COLUMNS FROM properties LIKE 'project_type'");
+    $hasProjectType = $checkProjectType->rowCount() > 0;
+    $checkUpcomingData = $db->query("SHOW COLUMNS FROM properties LIKE 'upcoming_project_data'");
+    $hasUpcomingData = $checkUpcomingData->rowCount() > 0;
+    
     // Start transaction
     $transactionStarted = false;
     try {
@@ -381,54 +474,79 @@ try {
         $userData = $stmt->fetch();
         $userFullName = $userData['full_name'] ?? $user['full_name'] ?? '';
         
-        // Insert property (is_active defaults to 1, but explicitly set it)
-        // Check if project_type column exists (for backward compatibility)
-        $checkProjectType = $db->query("SHOW COLUMNS FROM properties LIKE 'project_type'");
-        $hasProjectType = $checkProjectType->rowCount() > 0;
+        error_log("Add Property: activeSubscriptionId=" . ($activeSubscriptionId ?? 'NULL') . " for user_id=" . $user['id']);
         
-        $checkUpcomingData = $db->query("SHOW COLUMNS FROM properties LIKE 'upcoming_project_data'");
-        $hasUpcomingData = $checkUpcomingData->rowCount() > 0;
+        $coverImage = null;
         
-        if ($hasProjectType && $hasUpcomingData) {
-            // New schema with project_type and upcoming_project_data
-            $stmt = $db->prepare("
-                INSERT INTO properties (
-                    user_id, user_full_name, title, status, property_type, project_type, location, latitude, longitude,
-                    state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
-                    facing, age, furnishing, description, price, price_negotiable,
-                    maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, upcoming_project_data, available_for_bachelors, is_active
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            // coverImage will be set after base64 conversion, use null for now
-            $coverImage = null;
-            
-            $stmt->execute([
-                $user['id'], $userFullName, $title, $status, $propertyType, $projectType, $location, $latitude, $longitude,
-                $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
-                $facing, $age, $furnishing, $description, $price, $priceNegotiable,
-                $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $upcomingProjectData, $availableForBachelors, 1
-            ]);
+        if ($hasSubscriptionIdCol) {
+            if ($hasProjectType && $hasUpcomingData) {
+                $stmt = $db->prepare("
+                    INSERT INTO properties (
+                        user_id, subscription_id, user_full_name, title, status, property_type, project_type, location, latitude, longitude,
+                        state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
+                        facing, age, furnishing, description, price, price_negotiable,
+                        maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, upcoming_project_data, available_for_bachelors, is_active
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $stmt->execute([
+                    $user['id'], $activeSubscriptionId, $userFullName, $title, $status, $propertyType, $projectType, $location, $latitude, $longitude,
+                    $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
+                    $facing, $age, $furnishing, $description, $price, $priceNegotiable,
+                    $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $upcomingProjectData, $availableForBachelors, 1
+                ]);
+            } else {
+                $stmt = $db->prepare("
+                    INSERT INTO properties (
+                        user_id, subscription_id, user_full_name, title, status, property_type, location, latitude, longitude,
+                        state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
+                        facing, age, furnishing, description, price, price_negotiable,
+                        maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, available_for_bachelors, is_active
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $stmt->execute([
+                    $user['id'], $activeSubscriptionId, $userFullName, $title, $status, $propertyType, $location, $latitude, $longitude,
+                    $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
+                    $facing, $age, $furnishing, $description, $price, $priceNegotiable,
+                    $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $availableForBachelors, 1
+                ]);
+            }
         } else {
-            // Old schema without project_type (backward compatibility)
-            $stmt = $db->prepare("
-                INSERT INTO properties (
-                    user_id, user_full_name, title, status, property_type, location, latitude, longitude,
-                    state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
-                    facing, age, furnishing, description, price, price_negotiable,
-                    maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, available_for_bachelors, is_active
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            // coverImage will be set after base64 conversion, use null for now
-            $coverImage = null;
-            
-            $stmt->execute([
-                $user['id'], $userFullName, $title, $status, $propertyType, $location, $latitude, $longitude,
-                $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
-                $facing, $age, $furnishing, $description, $price, $priceNegotiable,
-                $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $availableForBachelors, 1
-            ]);
+            // subscription_id column doesn't exist — INSERT without it
+            if ($hasProjectType && $hasUpcomingData) {
+                $stmt = $db->prepare("
+                    INSERT INTO properties (
+                        user_id, user_full_name, title, status, property_type, project_type, location, latitude, longitude,
+                        state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
+                        facing, age, furnishing, description, price, price_negotiable,
+                        maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, upcoming_project_data, available_for_bachelors, is_active
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $stmt->execute([
+                    $user['id'], $userFullName, $title, $status, $propertyType, $projectType, $location, $latitude, $longitude,
+                    $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
+                    $facing, $age, $furnishing, $description, $price, $priceNegotiable,
+                    $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $upcomingProjectData, $availableForBachelors, 1
+                ]);
+            } else {
+                $stmt = $db->prepare("
+                    INSERT INTO properties (
+                        user_id, user_full_name, title, status, property_type, location, latitude, longitude,
+                        state, additional_address, bedrooms, bathrooms, balconies, area, carpet_area, floor, total_floors,
+                        facing, age, furnishing, description, price, price_negotiable,
+                        maintenance_charges, deposit_amount, cover_image, video_url, brochure_url, available_for_bachelors, is_active
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $stmt->execute([
+                    $user['id'], $userFullName, $title, $status, $propertyType, $location, $latitude, $longitude,
+                    $state, $additionalAddress, $bedrooms, $bathrooms, $balconies, $area, $carpetArea, $floor, $totalFloors,
+                    $facing, $age, $furnishing, $description, $price, $priceNegotiable,
+                    $maintenanceCharges, $depositAmount, $coverImage, $videoUrl, $brochureUrl, $availableForBachelors, 1
+                ]);
+            }
         }
         
         $propertyId = $db->lastInsertId();

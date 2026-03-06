@@ -8,27 +8,25 @@ import { API_BASE_URL } from "../../config/api.config";
 import { sellerDashboardAPI } from "../../services/api.service";
 import "../styles/SellerProperties.css";
 
-const MAX_PROPERTIES = 3;
-
-// Plan limits for paid listing plans
-const PLAN_LIMITS = { basic_listing: 1, pro_listing: 5 };
-
 const SellerProperties = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { properties, deleteProperty } = useProperty();
+  const { properties, deleteProperty, activateProperty, activeSubscription } = useProperty();
   const [canAddProperty, setCanAddProperty] = useState(false);
-  const [maxAllowedProperties, setMaxAllowedProperties] = useState(MAX_PROPERTIES);
+  const [maxAllowedProperties, setMaxAllowedProperties] = useState(0);
+  const [propertiesUsedInPlan, setPropertiesUsedInPlan] = useState(0);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterVisibility, setFilterVisibility] = useState('all'); // 'all' | 'live' | 'deactivated'
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
   const [pendingProperty, setPendingProperty] = useState(null);
+  const [activatingPropertyId, setActivatingPropertyId] = useState(null);
 
   // Check if user can add property (active paid plan with slots)
   useEffect(() => {
@@ -36,15 +34,17 @@ const SellerProperties = () => {
       try {
         const { data } = await sellerDashboardAPI.getStats();
         const sub = data?.subscription;
-        const totalProps = data?.total_properties ?? properties.length;
+        // Use properties_in_current_plan (properties created during this subscription) instead of total
+        const propsInPlan = data?.properties_in_current_plan ?? data?.total_properties ?? properties.length;
         const endDate = sub?.end_date ? new Date(sub.end_date) : null;
         const isActive = endDate && endDate > new Date();
         const planType = sub?.plan_type;
+        const limit = sub?.properties_limit ?? 0;
 
-        if (planType && PLAN_LIMITS[planType] !== undefined && isActive) {
-          const limit = PLAN_LIMITS[planType];
+        if (planType && planType !== 'free' && isActive && limit > 0) {
           setMaxAllowedProperties(limit);
-          setCanAddProperty(totalProps < limit);
+          setPropertiesUsedInPlan(propsInPlan);
+          setCanAddProperty(propsInPlan < limit);
         } else {
           setCanAddProperty(false);
           setMaxAllowedProperties(0);
@@ -80,9 +80,16 @@ const SellerProperties = () => {
     return properties
       .filter(p => {
         const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+        const matchesVisibility = (() => {
+          if (filterVisibility === 'all') return true;
+          const isDeactivated = !p.isActive && p.subscriptionExpired;
+          if (filterVisibility === 'live') return !isDeactivated;
+          if (filterVisibility === 'deactivated') return isDeactivated;
+          return true;
+        })();
         const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              p.location.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesStatus && matchesSearch;
+        return matchesStatus && matchesVisibility && matchesSearch;
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -98,7 +105,7 @@ const SellerProperties = () => {
             return 0;
         }
       });
-  }, [properties, filterStatus, searchTerm, sortBy]);
+  }, [properties, filterStatus, filterVisibility, searchTerm, sortBy]);
 
   const openNew = useCallback(() => {
     if (checkingAccess) return;
@@ -106,13 +113,9 @@ const SellerProperties = () => {
       navigate('/seller-dashboard/plans');
       return;
     }
-    if (properties.length >= maxAllowedProperties) {
-      alert(`You have reached your plan limit (${maxAllowedProperties}). Upgrade to add more.`);
-      return;
-    }
     setEditIndex(null);
     setShowForm(true);
-  }, [properties.length, canAddProperty, maxAllowedProperties, checkingAccess, navigate]);
+  }, [canAddProperty, checkingAccess, navigate]);
 
   const openEdit = useCallback((idx) => {
     setEditIndex(idx);
@@ -142,6 +145,29 @@ const SellerProperties = () => {
     console.log('Navigation path:', path);
     window.open(path, '_blank', 'noopener,noreferrer');
   }, []);
+
+  const handleMakeLive = useCallback(async (propertyId) => {
+    if (!activeSubscription || activeSubscription.slots_available <= 0) {
+      navigate('/seller-dashboard/plans');
+      return;
+    }
+    
+    setActivatingPropertyId(propertyId);
+    try {
+      await activateProperty(propertyId);
+    } catch (error) {
+      const errorData = error?.data || error;
+      if (errorData?.code === 'NO_ACTIVE_PLAN' || errorData?.requires_subscription) {
+        navigate('/seller-dashboard/plans');
+      } else if (errorData?.code === 'PLAN_LIMIT_REACHED') {
+        navigate('/seller-dashboard/plans');
+      } else {
+        alert(error?.message || 'Failed to activate property. Please try again.');
+      }
+    } finally {
+      setActivatingPropertyId(null);
+    }
+  }, [activateProperty, activeSubscription, navigate]);
 
   // Helper function to check if property is older than 24 hours
   const isPropertyOlderThan24Hours = useCallback((property) => {
@@ -181,7 +207,7 @@ const SellerProperties = () => {
             <h1>My Properties</h1>
             <p className="seller-props-subtitle">
               {canAddProperty
-                ? `${properties.length} of ${maxAllowedProperties} properties listed`
+                ? `${propertiesUsedInPlan} of ${maxAllowedProperties} properties listed (current plan)`
                 : `${properties.length} properties • Choose a plan to add more`}
             </p>
           </div>
@@ -215,6 +241,12 @@ const SellerProperties = () => {
               <option value="all">All Status</option>
               <option value="sale">For Sale</option>
               <option value="rent">For Rent</option>
+            </select>
+
+            <select value={filterVisibility} onChange={(e) => setFilterVisibility(e.target.value)}>
+              <option value="all">All Listings</option>
+              <option value="live">Live</option>
+              <option value="deactivated">Deactivated</option>
             </select>
 
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -260,11 +292,11 @@ const SellerProperties = () => {
           </div>
           <h3>No Properties Found</h3>
           <p>
-            {searchTerm || filterStatus !== 'all'
+            {searchTerm || filterStatus !== 'all' || filterVisibility !== 'all'
               ? 'Try adjusting your filters'
               : 'Start by adding your first property listing'}
           </p>
-          {!searchTerm && filterStatus === 'all' && (
+          {!searchTerm && filterStatus === 'all' && filterVisibility === 'all' && (
             <button className="seller-props-empty-action-btn" onClick={openNew}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -278,7 +310,7 @@ const SellerProperties = () => {
           {filteredProperties.map((property, index) => (
             <div 
               key={property.id} 
-              className={`seller-props-card ${viewMode}`}
+              className={`seller-props-card ${viewMode}${!property.isActive && property.subscriptionExpired ? ' expired' : ''}`}
               style={{ animationDelay: `${index * 0.05}s`, cursor: 'pointer' }}
               onClick={() => handleViewDetails(property.id)}
             >
@@ -304,6 +336,41 @@ const SellerProperties = () => {
                     e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=500';
                   }}
                 />
+                {/* Expired overlay */}
+                {!property.isActive && property.subscriptionExpired && (
+                  <div className="seller-props-expired-overlay" onClick={(e) => e.stopPropagation()}>
+                    <div className="seller-props-expired-content">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <span className="seller-props-expired-label">Plan Expired</span>
+                      <span className="seller-props-expired-sublabel">Not visible to buyers</span>
+                      {activeSubscription && activeSubscription.slots_available > 0 ? (
+                        <button
+                          className="seller-props-make-live-btn"
+                          disabled={activatingPropertyId === property.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMakeLive(property.id);
+                          }}
+                        >
+                          {activatingPropertyId === property.id ? 'Activating...' : 'Make Live'}
+                        </button>
+                      ) : (
+                        <button
+                          className="seller-props-buy-plan-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/seller-dashboard/plans');
+                          }}
+                        >
+                          Buy Plan
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="seller-props-image-overlay">
                   <button 
                     className="seller-props-overlay-btn" 
@@ -332,6 +399,9 @@ const SellerProperties = () => {
                 <span className={`seller-props-badge ${property.status}`}>
                   {property.status === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
+                {!property.isActive && property.subscriptionExpired && (
+                  <span className="seller-props-inactive-badge">Inactive</span>
+                )}
                 {property.featured && (
                   <span className="seller-props-featured-badge">Featured</span>
                 )}
@@ -393,45 +463,107 @@ const SellerProperties = () => {
                     {property.status === 'rent' && <span className="seller-props-per-month">/month</span>}
                   </div>
                   <div className="seller-props-action-btns">
-                    <button 
-                      className="seller-props-view-details-btn" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDetails(property.id);
-                      }}
-                      title="View Details"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2"/>
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                      View
-                    </button>
-                    <button 
-                      className="seller-props-edit-btn" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEdit(getPropertyIndex(property.id));
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                      Edit
-                    </button>
-                    <button 
-                      className="seller-props-delete-btn" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(property.id);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                      Delete
-                    </button>
+                    {!property.isActive && property.subscriptionExpired ? (
+                      <>
+                        <button 
+                          className="seller-props-view-details-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(property.id);
+                          }}
+                          title="View Details"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          View
+                        </button>
+                        {activeSubscription && activeSubscription.slots_available > 0 ? (
+                          <button
+                            className="seller-props-make-live-action-btn"
+                            disabled={activatingPropertyId === property.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMakeLive(property.id);
+                            }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            {activatingPropertyId === property.id ? 'Activating...' : 'Make Live'}
+                          </button>
+                        ) : (
+                          <button
+                            className="seller-props-buy-plan-action-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/seller-dashboard/plans');
+                            }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M2 10h20" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                            Buy Plan
+                          </button>
+                        )}
+                        <button 
+                          className="seller-props-delete-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(property.id);
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          className="seller-props-view-details-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(property.id);
+                          }}
+                          title="View Details"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          View
+                        </button>
+                        <button 
+                          className="seller-props-edit-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(getPropertyIndex(property.id));
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          Edit
+                        </button>
+                        <button 
+                          className="seller-props-delete-btn" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(property.id);
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -439,7 +571,7 @@ const SellerProperties = () => {
           ))}
 
           {/* Add Property Card */}
-          {properties.length < MAX_PROPERTIES && viewMode === 'grid' && (
+          {canAddProperty && viewMode === 'grid' && (
             <div className="seller-props-card seller-props-add-card" onClick={openNew}>
               <div className="seller-props-add-card-content">
                 <div className="seller-props-add-icon">
