@@ -265,7 +265,8 @@ const PROPERTY_TYPE_AMENITIES = {
 
 const FURNISHING_OPTIONS = ["Unfurnished", "Semi-Furnished", "Fully-Furnished"];
 const FACING_OPTIONS = ["North", "South", "East", "West", "North-East", "North-West", "South-East", "South-West"];
-const AGE_OPTIONS = ["New Construction", "Less than 1 Year", "1-5 Years", "5-10 Years", "10+ Years"];
+const PROPERTY_STATUS_OPTIONS = ["New", "Resale"];
+const RESALE_AGE_OPTIONS = ["Less than 1 Year", "1-5 Years", "5-10 Years", "10+ Years"];
 
 export default function AddPropertyPopup({ onClose, editIndex = null, initialData = null }) {
   const { addProperty, updateProperty, properties } = useProperty();
@@ -311,46 +312,22 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
 
   const isRestrictedEdit = isPropertyOlderThan24Hours();
 
-  const [formData, setFormData] = useState(initialData || {
-    // Step 1: Basic Info
-    title: "",
-    status: "sale",
-    propertyType: "",
-
-    // Step 2: Property Details
-    location: "",
-    latitude: "",
-    longitude: "",
-    state: "",
-    additionalAddress: "",
-    bedrooms: "",
-    bathrooms: "",
-    balconies: "",
-    area: "",
-    carpetArea: "",
-    floor: "",
-    totalFloors: "",
-    facing: "",
-    age: "",
-    furnishing: "",
-    seats: "", // NEW
-    pricePerSeat: "", // NEW
-
-    // Step 3: Amenities
-    amenities: [],
-    description: "",
-
-    // Step 4: Media
-    images: [],
-    video: null,       // NEW
-    brochure: null,    // NEW (object: { name, size, url })
-
-    // Step 5: Pricing
-    price: "",
-    priceNegotiable: false,
-    maintenanceCharges: "",
-    depositAmount: "",
-    availableForBachelors: false
+  const [formData, setFormData] = useState(() => {
+    const base = initialData || {
+      title: "", status: "sale", propertyType: "",
+      location: "", latitude: "", longitude: "", state: "", additionalAddress: "",
+      bedrooms: "", bathrooms: "", balconies: "", area: "", carpetArea: "",
+      floor: "", totalFloors: "", facing: "", age: "", furnishing: "",
+      seats: "", pricePerSeat: "",
+      amenities: [], description: "",
+      images: [], video: null, brochure: null,
+      price: "", priceNegotiable: false, maintenanceCharges: "", depositAmount: "", availableForBachelors: false
+    };
+    if (!initialData) return { ...base, propertyStatus: "", age: "" };
+    const age = initialData.age || "";
+    const propertyStatus = age === "New Construction" ? "New" : (age ? "Resale" : "");
+    const derivedAge = age === "New Construction" ? "" : age;
+    return { ...base, propertyStatus, age: derivedAge };
   });
 
   // Reset all form state (for hard discard)
@@ -372,6 +349,7 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       floor: "",
       totalFloors: "",
       facing: "",
+      propertyStatus: "",
       age: "",
       furnishing: "",
       seats: "",
@@ -1291,8 +1269,12 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
           newErrors.facing = "Facing is required";
         }
 
-        if (fieldConfig.showAge && !formData.age?.trim()) {
-          newErrors.age = "Property age is required";
+        if (fieldConfig.showAge) {
+          if (!formData.propertyStatus?.trim()) {
+            newErrors.propertyStatus = "Property status is required";
+          } else if (formData.propertyStatus === "Resale" && !formData.age?.trim()) {
+            newErrors.age = "Property age is required for resale";
+          }
         }
 
         // Furnishing validation - required when shown
@@ -1534,7 +1516,8 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       // For new properties: Create property first, then upload images
       if (editIndex === null) {
         // Create property with empty images array first to get property ID
-        const propertyDataWithoutImages = { ...formData, images: [] };
+        const ageForApi = formData.propertyStatus === "New" ? "New Construction" : (formData.propertyStatus === "Resale" ? (formData.age || "") : "");
+        const propertyDataWithoutImages = { ...formData, age: ageForApi, images: [] };
         let createdProperty;
         try {
           createdProperty = await addProperty(propertyDataWithoutImages);
@@ -1651,7 +1634,8 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         // Editing existing property (build payload immutably; do not mutate formData)
         const propertyId = properties[editIndex]?.id;
         if (propertyId) {
-          let updatePayload = { ...formData, images: uploadedImageUrls };
+          const ageForApi = formData.propertyStatus === "New" ? "New Construction" : (formData.propertyStatus === "Resale" ? (formData.age || "") : "");
+          let updatePayload = { ...formData, age: ageForApi, images: uploadedImageUrls };
 
           // Upload video if a new video file was selected
           if (formData.video && formData.video.file) {
@@ -2225,19 +2209,40 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
             )}
 
             {fieldConfig.showAge && (
-              <div className="form-group" data-field="age">
-                <label>Property Age <span className="required">*</span></label>
-                <select
-                  value={formData.age}
-                  onChange={(e) => handleChange('age', e.target.value)}
-                >
-                  <option value="">Select</option>
-                  {AGE_OPTIONS.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-                {errors.age && <span className="error-text">{errors.age}</span>}
-              </div>
+              <>
+                <div className="form-group" data-field="propertyStatus">
+                  <label>Property Status <span className="required">*</span></label>
+                  <select
+                    value={formData.propertyStatus || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleChange('propertyStatus', val);
+                      if (val === 'New') handleChange('age', '');
+                    }}
+                  >
+                    <option value="">Select</option>
+                    {PROPERTY_STATUS_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  {errors.propertyStatus && <span className="error-text">{errors.propertyStatus}</span>}
+                </div>
+                {formData.propertyStatus === 'Resale' && (
+                  <div className="form-group" data-field="age">
+                    <label>Property Age <span className="required">*</span></label>
+                    <select
+                      value={formData.age}
+                      onChange={(e) => handleChange('age', e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      {RESALE_AGE_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                    {errors.age && <span className="error-text">{errors.age}</span>}
+                  </div>
+                )}
+              </>
             )}
 
             {fieldConfig.showFurnishing && (
