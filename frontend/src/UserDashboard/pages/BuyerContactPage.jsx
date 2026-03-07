@@ -152,8 +152,8 @@ export default function Contact() {
             
             <div className="buyer-contact-info-item">
               <div className="buyer-contact-info-label">Phone</div>
-              <a href="tel:+919371316019" className="buyer-contact-info-link">
-                +919371316019
+              <a href="tel:+917057714677" className="buyer-contact-info-link">
+                +917057714677
               </a>
             </div>
 
@@ -270,7 +270,7 @@ export default function Contact() {
               },
               {
                 question: "How can I get support?",
-                answer: "You can get support by filling out the contact form on this page, or by emailing us directly at info@360coordinates.com. Our support team typically responds within 24 hours. You can also call us at +919371316019 during business hours."
+                answer: "You can get support by filling out the contact form on this page, or by emailing us directly at info@360coordinates.com. Our support team typically responds within 24 hours. You can also call us at +917057714677 during business hours."
               }
             ].map((faq, index) => (
               <div key={index} className={`buyer-faq-item ${openFaqIndex === index ? 'open' : ''}`}>

@@ -1,0 +1,1579 @@
+{
+    "description": "DO NOT DELETE THIS FILE. This file is used to keep track of which files have been synced in the most recent deployment. If you delete this file a resync will need to be done (which can take a while) - read more: https://github.com/SamKirkland/FTP-Deploy-Action",
+    "version": "1.0.0",
+    "generatedTime": 1772434890121,
+    "data": [
+        {
+            "type": "file",
+            "name": ".htaccess",
+            "size": 1461,
+            "hash": "b9426883cd28c6fd8edd35dae5904ead9fc5a9ec6b0fbdc441177a1a70181d1f"
+        },
+        {
+            "type": "file",
+            "name": "401_ERROR_TROUBLESHOOTING.md",
+            "size": 4143,
+            "hash": "96bf4c5fe8909a2a8d8d606989fd1573b57d2c09c8b2f427270f6f4b56952819"
+        },
+        {
+            "type": "file",
+            "name": "DEBUGGING_WELCOME_EMAIL.md",
+            "size": 5861,
+            "hash": "2ea54eb3c5e203051045ac4b8551e823ebe5e2e54ba8989065902ed1184b870f"
+        },
+        {
+            "type": "file",
+            "name": "FEATURES.md",
+            "size": 5148,
+            "hash": "d58869f63ec3c7a0e313b9889977b8054db95b626f4cf3f9f665ab2bc65aa70a"
+        },
+        {
+            "type": "file",
+            "name": "FINAL_VERIFICATION_SUMMARY.md",
+            "size": 2594,
+            "hash": "dd3fb1a7a43e84cad47c01e3dc5cdc8e2e2fabd20cd51615d3bfe7e21dd74a99"
+        },
+        {
+            "type": "file",
+            "name": "FIX_401_ERROR_NOW.md",
+            "size": 4280,
+            "hash": "2a24269345ee1bd121759b1be03f3b6653648d792bf9cd330c9ad927ce425318"
+        },
+        {
+            "type": "file",
+            "name": "FIX_418_SIMPLE_INSTRUCTIONS.md",
+            "size": 1937,
+            "hash": "7a5caaa1bd6ec8a5bd1bb81cf6a4aba61b1b93143c5e73102d83faea664fccb1"
+        },
+        {
+            "type": "file",
+            "name": "IMAGE_MODERATION_SETUP.md",
+            "size": 7434,
+            "hash": "c0c01787c06eef0a46a6e5928aa1e1ecb2734de45b9de908bdb9418eaf8e9225"
+        },
+        {
+            "type": "file",
+            "name": "README.md",
+            "size": 8135,
+            "hash": "16eab67bda403ec3f3cb804532938d7cab5d3e01bb30ab2b11a9a22b9ef35a3d"
+        },
+        {
+            "type": "file",
+            "name": "SETUP.md",
+            "size": 2165,
+            "hash": "b115fcc5ff68def2ffc0e4d94fa9298c1f2ce8e313f98ce77c8d00f6853c0ad2"
+        },
+        {
+            "type": "file",
+            "name": "SMTP_SETUP.md",
+            "size": 2699,
+            "hash": "1ca931539ca031fad89796d3d9132c9c12f247e4a9697d57f6721d0936c0fc3d"
+        },
+        {
+            "type": "file",
+            "name": "WELCOME_EMAIL_FINAL_CHECK.md",
+            "size": 4786,
+            "hash": "3f64f99979b1f603124d17149fb74eab9f67e1ffc9427ce64c22035e48a8176a"
+        },
+        {
+            "type": "file",
+            "name": "WELCOME_EMAIL_PRODUCTION_CHECKLIST.md",
+            "size": 7017,
+            "hash": "df0b121a63936f1d5b4ecbb32c1ee8a3891de9dcc9f1764624d82c0f58596d56"
+        },
+        {
+            "type": "file",
+            "name": "WELCOME_EMAIL_VERIFICATION.md",
+            "size": 5714,
+            "hash": "06621487cc0d4793f915d4f1f7c51e96f789a7cd4af8666898d31014638895b1"
+        },
+        {
+            "type": "folder",
+            "name": "api"
+        },
+        {
+            "type": "file",
+            "name": "check-property-tables.php",
+            "size": 1264,
+            "hash": "337372e9de7a3fb02f0835e0b615668e0f9872562fb83f327c39d54008c3b9c4"
+        },
+        {
+            "type": "file",
+            "name": "composer.json",
+            "size": 776,
+            "hash": "c9bffdb86f4d46235e5015129ae3da3ebd00030f3de3502d8f5ede95e737edbf"
+        },
+        {
+            "type": "folder",
+            "name": "config"
+        },
+        {
+            "type": "folder",
+            "name": "database"
+        },
+        {
+            "type": "file",
+            "name": "diagnose-vision-api.php",
+            "size": 7871,
+            "hash": "973ef830b2a45cd2b96b08136642baa9f7d0fa93578fa7f31e4a08a243748ba8"
+        },
+        {
+            "type": "file",
+            "name": "firebase-key.json",
+            "size": 2391,
+            "hash": "ee2d03b8115002675376621936e6e220a48f31f9fb2ee898c0f17de3decfe296"
+        },
+        {
+            "type": "folder",
+            "name": "helpers"
+        },
+        {
+            "type": "file",
+            "name": "install-dependencies.php",
+            "size": 9091,
+            "hash": "c99289e4cb29cf907b8c1b3539264ac4f613c2264bdc4790326d25220fc2922a"
+        },
+        {
+            "type": "folder",
+            "name": "services"
+        },
+        {
+            "type": "file",
+            "name": "setup-uploads.php",
+            "size": 8752,
+            "hash": "0c05fd38752bdd872a768911478223def7e7463e663f6d0adf91c70176d2413c"
+        },
+        {
+            "type": "file",
+            "name": "test-api-call.php",
+            "size": 4967,
+            "hash": "048c8872860218cae1076411379cf84b4bd70dd4900f4ebfd3946063af396674"
+        },
+        {
+            "type": "file",
+            "name": "test-simple.php",
+            "size": 2039,
+            "hash": "71175c09d69c66a7ef6d2aeeea1332c7567400380b0232abd4553206b0a76de4"
+        },
+        {
+            "type": "file",
+            "name": "test.php",
+            "size": 460,
+            "hash": "ee93d2f7971d6612fb55d70d35739973a6d6d86a9638e7a95976bafa80c9cd3a"
+        },
+        {
+            "type": "file",
+            "name": "test-watermark.php",
+            "size": 3908,
+            "hash": "4a7495a9a7423e18ce05176e06c16d7b00b283918060902d7ef17fd2de458562"
+        },
+        {
+            "type": "file",
+            "name": "testai.php",
+            "size": 2297,
+            "hash": "b9a6c5421857fdada6c07d061b7ab30c75b416dcd40f9c10bc73f87b3fc739f1"
+        },
+        {
+            "type": "folder",
+            "name": "utils"
+        },
+        {
+            "type": "folder",
+            "name": "workers"
+        },
+        {
+            "type": "file",
+            "name": "api/.htaccess",
+            "size": 452,
+            "hash": "f293eb8e96aaab0ca698067889a3c6a20eac33b22c5fbf555b599d684f0d1727"
+        },
+        {
+            "type": "file",
+            "name": "api/Catcherror.php",
+            "size": 10530,
+            "hash": "7662aa164df3f7c7296dfe576f487eab4d3a55d6c30923a99d568dfe43ea16e4"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin"
+        },
+        {
+            "type": "folder",
+            "name": "api/auth"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer"
+        },
+        {
+            "type": "folder",
+            "name": "api/chat"
+        },
+        {
+            "type": "file",
+            "name": "api/check-email-status.php",
+            "size": 2058,
+            "hash": "36d0ec7110517773af1eca32552c29251c9b971ddfd331ea4975e149c2234436"
+        },
+        {
+            "type": "file",
+            "name": "api/check-property-coordinates.php",
+            "size": 5227,
+            "hash": "29d4ca3d0382f8038bcaf8244cdf9c4875c7aec266dca9d879b563853e753e6e"
+        },
+        {
+            "type": "file",
+            "name": "api/check-server-ip.php",
+            "size": 2235,
+            "hash": "58686291dbef598d5313c85d77e01dbe1a1081c4e14991ea63a1d9ab69988d69"
+        },
+        {
+            "type": "file",
+            "name": "api/debug-check.php",
+            "size": 2194,
+            "hash": "af24cf475c05fd9c450f38c37a4cf711c7855ac27d5f4fda98821c7af97a3ff7"
+        },
+        {
+            "type": "file",
+            "name": "api/debug-inquiries.php",
+            "size": 2371,
+            "hash": "8e9eb5c4b50b7e09d47aa1274f410064dc94ba54b92844644dc1da50e79729ec"
+        },
+        {
+            "type": "file",
+            "name": "api/debug-otp.php",
+            "size": 1117,
+            "hash": "2680e0fb63da16a954a168320e19bb5979373ee6b481aeee9a15defb80529035"
+        },
+        {
+            "type": "file",
+            "name": "api/debug-test.php",
+            "size": 9706,
+            "hash": "631e9b4673649d6f088839f51e2edda895023111ff8bfa031b8db6b93c40b9ea"
+        },
+        {
+            "type": "file",
+            "name": "api/debug-user-subscription.php",
+            "size": 4034,
+            "hash": "6c73faabf6341585d8c4b81f41fc274901beb6afadb6544d9deaef66fef493b4"
+        },
+        {
+            "type": "folder",
+            "name": "api/device-token"
+        },
+        {
+            "type": "file",
+            "name": "api/diagnose-welcome-email-smtp.php",
+            "size": 8373,
+            "hash": "541c165707ea035dbb4d7cbb25af15d95437bc15fc4196a42b9ccb32ca0c4cb0"
+        },
+        {
+            "type": "file",
+            "name": "api/diagnose-welcome-email-complete.php",
+            "size": 4646,
+            "hash": "be56baf08a94b4e7de54d2b712b5480c87f9429c832a139295c3e2b37133788e"
+        },
+        {
+            "type": "file",
+            "name": "api/error.php",
+            "size": 534,
+            "hash": "b2d7cef4911359ef1fe5b6d752095f483b0650da2553bf129a1a84d95a3503dd"
+        },
+        {
+            "type": "file",
+            "name": "api/get-server-ip-simple.php",
+            "size": 1412,
+            "hash": "7ac26469a2a0aad76139b219a1fb50dc0c22c5d68d8b471bbd5e1865099a5702"
+        },
+        {
+            "type": "folder",
+            "name": "api/home"
+        },
+        {
+            "type": "file",
+            "name": "api/index.php",
+            "size": 1525,
+            "hash": "2fc5b19c61701fab3d86a58d62b51b6a8eddadf95bc5860590835a5d489d3331"
+        },
+        {
+            "type": "folder",
+            "name": "api/images"
+        },
+        {
+            "type": "file",
+            "name": "api/msg91-error-418-fix.php",
+            "size": 7208,
+            "hash": "92f561171c3df72e6e5653a853ecc7c64c4757ca54cad6bafa2eb0326b289b83"
+        },
+        {
+            "type": "folder",
+            "name": "api/otp"
+        },
+        {
+            "type": "folder",
+            "name": "api/payment"
+        },
+        {
+            "type": "folder",
+            "name": "api/public"
+        },
+        {
+            "type": "file",
+            "name": "api/show-ip.php",
+            "size": 1792,
+            "hash": "06dc2d6c219c7204c9926d4caafea5f0ecde4621a5069316a9d726b31d93837e"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller"
+        },
+        {
+            "type": "file",
+            "name": "api/show-smtp-settings.php",
+            "size": 9394,
+            "hash": "33a0e69f236822653558101063ed18620b74547283a748d5b7751298bffe4f80"
+        },
+        {
+            "type": "file",
+            "name": "api/test-phpmailer-path.php",
+            "size": 2111,
+            "hash": "5df7e485bb4d4adf0601bde2ce5061c4126122fe5ff06798a80909464d402d29"
+        },
+        {
+            "type": "file",
+            "name": "api/test-smtp-465.php",
+            "size": 1996,
+            "hash": "41fc1cf5ab95631bb7173bf0f2ab62d0e62d0264fe0b88cfef3c48642752eeaa"
+        },
+        {
+            "type": "file",
+            "name": "api/test-smtp-auth-plain.php",
+            "size": 1494,
+            "hash": "2c2012785d33a17c9a052fe9d3a2d122506888ccfb81e238e8260448f6227ae7"
+        },
+        {
+            "type": "file",
+            "name": "api/test-smtp-msg91.php",
+            "size": 2760,
+            "hash": "0510acd6c57820e8794b9525662b15e31d05a81708c754e5500162d1e88b6fc0"
+        },
+        {
+            "type": "file",
+            "name": "api/test-smtp-simple.php",
+            "size": 960,
+            "hash": "f603d0ef81d092208f49499d1b7b41c62dc4e7277ae81d4312c9d5b9b98aced9"
+        },
+        {
+            "type": "file",
+            "name": "api/test-smtp.php",
+            "size": 4669,
+            "hash": "a376f3a452fd93480025b482cad53b8e0575644d663a4c25859cd900e517ea1f"
+        },
+        {
+            "type": "file",
+            "name": "api/test-vision.php",
+            "size": 1460,
+            "hash": "ba0c21a2aa769a54eb8c09b9a79663a7139b991e6843f2f665d38fd86b1d0638"
+        },
+        {
+            "type": "file",
+            "name": "api/test-welcome-email-direct.php",
+            "size": 6266,
+            "hash": "f4fc595541f2b0fb5ec3b89141430eb3a7a5711744dd4711fff302a4737a31ea"
+        },
+        {
+            "type": "folder",
+            "name": "api/upload"
+        },
+        {
+            "type": "file",
+            "name": "api/verify-msg91-config.php",
+            "size": 2424,
+            "hash": "a35db676a07ed4877127d440f7366151530b53087954ba86aa6818cc47efc630"
+        },
+        {
+            "type": "file",
+            "name": "api/view-email-logs.php",
+            "size": 7265,
+            "hash": "1cc0991fde2ca1bab16383bcc4e44aeb0469ad92cb571de16789ca33b52ff2fa"
+        },
+        {
+            "type": "file",
+            "name": "config/admin-config.php",
+            "size": 9070,
+            "hash": "028b30eaea0b76807b41aa83dd09d6b81507890f29ad2af5e2b8897744073b34"
+        },
+        {
+            "type": "file",
+            "name": "config/config.php",
+            "size": 14810,
+            "hash": "f73c0bfe672c093e2ea70630608bbcc1db6bd3d59997f1dd6f8237358d6055fd"
+        },
+        {
+            "type": "file",
+            "name": "config/database.php",
+            "size": 2871,
+            "hash": "8e5702f6a6dee0c202dfe5bdde90ade32929bd0b8cd1b3cb10b0bfd4678ff0df"
+        },
+        {
+            "type": "file",
+            "name": "config/email.php",
+            "size": 1294,
+            "hash": "68ca2a983c238ac9128eb447ffd9ce58aaa7edad9e3dd70bd1b1fbcdbbf761bc"
+        },
+        {
+            "type": "file",
+            "name": "config/moderation.php",
+            "size": 9129,
+            "hash": "8889c857db99918f5d8405e6429d891d7cf5b6971b8475e122e7e417f496aeb3"
+        },
+        {
+            "type": "file",
+            "name": "database/README_INTERACTION_LIMITS.md",
+            "size": 2772,
+            "hash": "1b124fa286bb99185fe39a1249b5ac9ea9501b335975d23d7a10fe008ae77dee"
+        },
+        {
+            "type": "file",
+            "name": "database/SETUP_INSTRUCTIONS.md",
+            "size": 3972,
+            "hash": "1cfa4b81cb66aab292821ade06bee04e6e8faa333a5190ae935b20cb210615de"
+        },
+        {
+            "type": "file",
+            "name": "database/VERIFY_TABLE.sql",
+            "size": 521,
+            "hash": "a86bf83ca2633107cbd68fdb9c5cd9f0d933baeb4a6229462e34c0d45f6d33bb"
+        },
+        {
+            "type": "file",
+            "name": "database/add_contact_fields_migration.sql",
+            "size": 1501,
+            "hash": "327f9a7c3e138a3b49e0de1fc611cdca6953af2ee31480cfe94b9ba943350700"
+        },
+        {
+            "type": "file",
+            "name": "database/add_full_name_column.php",
+            "size": 3162,
+            "hash": "512a3165ce204292d92db05e854518564d23251d76c58b255efabe2b0aeb7378"
+        },
+        {
+            "type": "file",
+            "name": "database/add_full_name_column_migration.sql",
+            "size": 1214,
+            "hash": "34652f56eb1a1a7cf056b7e5e2f9587eb33e37dab425e4434e7475f9f82f8a1d"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_2fa_migration.sql",
+            "size": 1488,
+            "hash": "da52c376b6645cf0d487a9053d4f896b25a42852fccb0c1c2009635415241ccd"
+        },
+        {
+            "type": "file",
+            "name": "database/add_project_type_migration.sql",
+            "size": 774,
+            "hash": "a81e3c69377c709d1d12b088510724adec23299f787b16829ce7e9e8ec170d40"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_google_oauth_migration.sql",
+            "size": 950,
+            "hash": "eae19ee81718b5d4acd8d482fb8afc3c3f0a6938327bc7f836efea94547153b6"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_login_complete_schema.sql",
+            "size": 7547,
+            "hash": "a12fa85c0c85ebfaeeb35b7dce7fa2c683e7a785337d26717133cc8c5add1df7"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_migration.sql",
+            "size": 2477,
+            "hash": "00e86bce300bb176aad96ca652254c75705572d2ed3964cd23c6d9233deb3534"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_otp_migration.sql",
+            "size": 637,
+            "hash": "3af96e54c0778a9aed06af4caf743969618b23a421976ba1db9be8350978e59f"
+        },
+        {
+            "type": "file",
+            "name": "database/admin_otp_phone_migration.sql",
+            "size": 400,
+            "hash": "861a8a9d167dc3eda736a9300e4586aef5d55884c599b5b1f9bcd438bfd01206"
+        },
+        {
+            "type": "file",
+            "name": "database/audit_logs_migration.sql",
+            "size": 975,
+            "hash": "a3099802762a106aaf282141be5d1a5e5d3dbbb06f554a02fa41acec3f1964e9"
+        },
+        {
+            "type": "file",
+            "name": "database/business_info_migration.sql",
+            "size": 595,
+            "hash": "b7a7d95f57c3e08a0843eeab2ec6cdc725734000ada09afe0ce82166e20d7c53"
+        },
+        {
+            "type": "file",
+            "name": "database/buyer_interaction_limits.sql",
+            "size": 1056,
+            "hash": "4689e1fcaaa6e947513d1dc0e2b2dafa7b1c41d7eb534f3ddab9ea405fd0f58d"
+        },
+        {
+            "type": "file",
+            "name": "database/device_tokens_migration.sql",
+            "size": 1034,
+            "hash": "60048e48b8fe6f6375fc866aede33b35bbe7c25914f8f08d57e5ec3a2a447591"
+        },
+        {
+            "type": "file",
+            "name": "database/fix-image-urls.sql",
+            "size": 1700,
+            "hash": "73fef7a5facadee55264a3b555083c12f4da3bebaba1b5e8c0aeec8a58f0ac2d"
+        },
+        {
+            "type": "file",
+            "name": "database/fix_admin_phone.sql",
+            "size": 590,
+            "hash": "07f4126f8cfd193d46d53a062283355ae2d015073a4c37488ea8dcbadc9474de"
+        },
+        {
+            "type": "file",
+            "name": "database/image_moderation_migration.sql",
+            "size": 10466,
+            "hash": "eefb239b520fbf943b014ec5752c5f814640f4b59e48fa41ca640bd547f0eb26"
+        },
+        {
+            "type": "file",
+            "name": "database/fix_remove_old_columns.sql",
+            "size": 2843,
+            "hash": "d2f58f51c37aaf19c6863680559db3ef44d70503f11bd76519b53c92b0007f49"
+        },
+        {
+            "type": "file",
+            "name": "database/image_moderation_migration_FIXED.sql",
+            "size": 12199,
+            "hash": "863392d801e2e68b190da5c05fc6a3e4ab2f1a772547ce25f9bae861904e033f"
+        },
+        {
+            "type": "file",
+            "name": "database/leads_migration.sql",
+            "size": 986,
+            "hash": "811bc0e6808226ce6f51d294867467520734b8b2eac63ab53732436204079586"
+        },
+        {
+            "type": "file",
+            "name": "database/razorpay_subscriptions_migration.sql",
+            "size": 712,
+            "hash": "ffe416fc00abda809824386258c0fb9bcc02352f2f52bd69aeb6a395c02abbf9"
+        },
+        {
+            "type": "file",
+            "name": "database/recreate_admin_sessions_table.sql",
+            "size": 921,
+            "hash": "286bbd786a5018575e58d5420441523169b1bdaad92b2cc13e0f8af6e37ee605"
+        },
+        {
+            "type": "file",
+            "name": "database/remove_experience_specialization.sql",
+            "size": 772,
+            "hash": "1ed0c7c93453bf6ea369e1e0ed548d2e77dec4c6fc381ba83869eb0fef6b163b"
+        },
+        {
+            "type": "file",
+            "name": "database/run_migration.php",
+            "size": 2968,
+            "hash": "fdb0cb296aad6f11f009893d8f450597d1411d902a28618e5da57423433b6627"
+        },
+        {
+            "type": "file",
+            "name": "database/schema.sql",
+            "size": 10436,
+            "hash": "59fbbfbad5b81f4333e40847a2606fded062f3ed393620f0f2384d682a683134"
+        },
+        {
+            "type": "file",
+            "name": "database/schema_refactor_migration.sql",
+            "size": 6928,
+            "hash": "1a2a714f67911bcaafa7d46549117ad95b57ec92c0da94a1efd54ddfec71f5e0"
+        },
+        {
+            "type": "file",
+            "name": "database/welcome_email_migration.sql",
+            "size": 3774,
+            "hash": "af679e28421c8a8c5c91cec9e7332199e57c28a0725e460a2d1e74bee06d3d11"
+        },
+        {
+            "type": "file",
+            "name": "helpers/BlurDetector.php",
+            "size": 10470,
+            "hash": "90848ddbeb8ab6900f26a711f91e020c28a8e23b03415725fc4e1774f4c6b2a3"
+        },
+        {
+            "type": "file",
+            "name": "helpers/FileHelper.php",
+            "size": 7538,
+            "hash": "c9df596cd70ce4f4c2b3df91e8ba5400eaf9508dd54e1438ad32a398ff4fe853"
+        },
+        {
+            "type": "file",
+            "name": "helpers/ResponseHelper.php",
+            "size": 4262,
+            "hash": "a16899e5356b00604de4f5ca5878dcd7d0f1ff46ce4d8771857aa5f74d0a47b5"
+        },
+        {
+            "type": "file",
+            "name": "helpers/email_helper.php",
+            "size": 7305,
+            "hash": "b74b922351bd573165651781b91a6d0f8b31a1c88c3ce16fb9e0c3b211cef4cd"
+        },
+        {
+            "type": "file",
+            "name": "helpers/email_helper_smtp.php",
+            "size": 9711,
+            "hash": "89d324a84f350c7f53a0825f0a6a136a2787c14cb683d54f2ba79a5a81c31c85"
+        },
+        {
+            "type": "file",
+            "name": "services/FCMMessagingService.php",
+            "size": 6959,
+            "hash": "a7c053c0a2d28fe66139f25dde3420efdf9c12c0196f156c2b23d39c71a3a95c"
+        },
+        {
+            "type": "file",
+            "name": "services/FirebaseStorageService.php",
+            "size": 10725,
+            "hash": "e15e82d51b5b582ffb2178403b7a176ab06f309370b62ac26a79c21a05ae138a"
+        },
+        {
+            "type": "file",
+            "name": "services/GoogleVisionService.php",
+            "size": 22313,
+            "hash": "63ab32bbf9d4e9343f661705af96074307e8f5319191fe3b45276e726720fcc9"
+        },
+        {
+            "type": "file",
+            "name": "services/ModerationDecisionService.php",
+            "size": 22312,
+            "hash": "c267f20e83ac35ae8d37eab1ea1d04b47fa78e5858bc142ecab323cd5d75c9ae"
+        },
+        {
+            "type": "file",
+            "name": "services/WatermarkService.php",
+            "size": 8925,
+            "hash": "8a1c3f32ad70b18476d74133adc492dfc3dcfbbd5157b1a195a1e078246a0f39"
+        },
+        {
+            "type": "file",
+            "name": "utils/FileHelper.php",
+            "size": 4998,
+            "hash": "fed33307aeb335d568c82ac35e92456b79215f5b5c88a9ceb93a331ba557afe4"
+        },
+        {
+            "type": "file",
+            "name": "utils/ResponseHelper.php",
+            "size": 1121,
+            "hash": "19d38c81dcf821ef320827330305e029e844b4e080a724259ae8da7b105c8d1b"
+        },
+        {
+            "type": "file",
+            "name": "utils/admin_auth.php",
+            "size": 2455,
+            "hash": "ae734b168bc64299a99f2438d5e50c5abd70e16c7bdb7974da192662fc3e8116"
+        },
+        {
+            "type": "file",
+            "name": "utils/admin_auth_middleware.php",
+            "size": 1657,
+            "hash": "e73453bd41d7728a2f2f2b6fda05223d3fa7ec749eee9c67bab99f4364f7e911"
+        },
+        {
+            "type": "file",
+            "name": "utils/admin_session.php",
+            "size": 9011,
+            "hash": "d00d0bb4e4f65e69aea9df5a1741469f5895fc940f2d51f80e6c772fe08c2e76"
+        },
+        {
+            "type": "file",
+            "name": "utils/audit_log.php",
+            "size": 1801,
+            "hash": "f7c2054a31ab3a7abc808d31f52cfb7b5fd91eb497e4b7de2e6954df3234e8aa"
+        },
+        {
+            "type": "file",
+            "name": "utils/auth.php",
+            "size": 8961,
+            "hash": "a0a1f8571839d89dec7b7bb51c60071921559a53850912e2eca003b7131e24d4"
+        },
+        {
+            "type": "file",
+            "name": "utils/geocoding.php",
+            "size": 4781,
+            "hash": "e61181673d544c4728e091f0c9339ee8e07016edf9bc11ec646c27359c8ac2f2"
+        },
+        {
+            "type": "file",
+            "name": "utils/mailer.php",
+            "size": 17752,
+            "hash": "cc11be5bde7243bff9f6f8bc080a8a5c10828e8873b9512392508bf1add8a899"
+        },
+        {
+            "type": "file",
+            "name": "utils/rate_limit.php",
+            "size": 4559,
+            "hash": "980b153323208e334672d0ab89152e572415c0a6d0a31525315c93d47e51ef9b"
+        },
+        {
+            "type": "file",
+            "name": "utils/response.php",
+            "size": 6028,
+            "hash": "f55b00c8860929b13944ff774872a517821749a556e89adccc1898a20b96673c"
+        },
+        {
+            "type": "file",
+            "name": "utils/upload.php",
+            "size": 18608,
+            "hash": "5e7c6667d0c978de9e387a2f9a744d9e63ca3b38f3fab8ade45ea271ecb19f96"
+        },
+        {
+            "type": "file",
+            "name": "utils/validation.php",
+            "size": 4677,
+            "hash": "80f17b2bd83ddba3c6c9f12cbf0b4924fcdc6f75500e8368d19886910b2e1942"
+        },
+        {
+            "type": "file",
+            "name": "utils/welcome_email_template.php",
+            "size": 8690,
+            "hash": "93d9c92d48861f5876a7b82cab309254a6101c5ce083357fcec54604b7c1fa4f"
+        },
+        {
+            "type": "file",
+            "name": "workers/send_welcome_email.php",
+            "size": 7710,
+            "hash": "0237343ff1b819a47e8f92d35df2fbcbd06decc425cd7769a812d63d856d4e58"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/agents"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/audit-logs"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/auth"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/dashboard"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/debug-all.php",
+            "size": 4138,
+            "hash": "725276d38cd32cc9fcfdfd886376c2684b9fe8b83b90ad575ea3c619547d16b8"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/inquiries"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/leads"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/moderation-queue"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/properties"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/subscriptions"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/support"
+        },
+        {
+            "type": "folder",
+            "name": "api/admin/users"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/debug-login.php",
+            "size": 1625,
+            "hash": "2da753dc4ad0a371862643b360f6291c3a9b26693b6b0b589d941b872b81748e"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/forgot-password-init.php",
+            "size": 1548,
+            "hash": "91a79473a2b8b88f367b89bf938567ef44d28feb02a763768d7ef8a03b267b55"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/login.php",
+            "size": 8951,
+            "hash": "6991883e67ca6687e75ac6d71c095ae345fe2177b6f36e39036ddf82ef0e9810"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/register.php",
+            "size": 27722,
+            "hash": "3f67e0972d0e099eba967f668d9f0824c3dec42dd1bf8f1d2d1b0245816716f0"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/reset-password.php",
+            "size": 2770,
+            "hash": "f6285848a9f8298d7fa6c1cba974f348eddd1a924e4a7e8ad7ebdae978891b25"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/switch-role.php",
+            "size": 4844,
+            "hash": "d424d51808bbe7d70beafc07947d6a845322ea929122fb0e3af47e25ed7fd022"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/test-login.php",
+            "size": 4847,
+            "hash": "12083dc04e66de2132491f4b4696e31e12f24de54a9cc0b613002660a0f2a77c"
+        },
+        {
+            "type": "file",
+            "name": "api/auth/verify.php",
+            "size": 1239,
+            "hash": "3620d4ddf2e1fb34d35fb0dfa31844680a0bd005226a2b262fe1b3a4f48df565"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/favorites"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/history"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/inquiries"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/interactions"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/profile"
+        },
+        {
+            "type": "folder",
+            "name": "api/buyer/properties"
+        },
+        {
+            "type": "file",
+            "name": "api/chat/create-room.php",
+            "size": 7802,
+            "hash": "e8d14d94b5b4a5d0fa4970ad71d648f577da493424024c973f9094d663c10c5e"
+        },
+        {
+            "type": "file",
+            "name": "api/device-token/register.php",
+            "size": 2049,
+            "hash": "3fd1afb5c99f1d6a5a4756fa255b6286a35ed3539ed7d3dae1ec127cc75cf0dc"
+        },
+        {
+            "type": "file",
+            "name": "api/device-token/unregister.php",
+            "size": 1367,
+            "hash": "cff0841f5b8f94bc7a73f056b43d62751595c3b1cf42894cd7debf2e07fe9c25"
+        },
+        {
+            "type": "file",
+            "name": "api/home/sendmail.php",
+            "size": 4445,
+            "hash": "8af731789f8ff2fc9134a27e23fce1c146191cd05131a7c66644382bab2a0dc1"
+        },
+        {
+            "type": "file",
+            "name": "api/images/UPLOAD_PATH_CHANGES.md",
+            "size": 5528,
+            "hash": "92abc6e3253fda90bb0f96ff73e12a1f94a370801721532966ff8c193e0b58ec"
+        },
+        {
+            "type": "file",
+            "name": "api/images/check-image-exists.php",
+            "size": 3318,
+            "hash": "67cac13b2f8be2910619442fb5644233a6665b67470144fd247e8603b1b13524"
+        },
+        {
+            "type": "file",
+            "name": "api/images/debug-paths.php",
+            "size": 4717,
+            "hash": "d63d765780cc2a0b56beb00a14a461f8f41d7d65f0c1fcdcb26d223644b9ebd8"
+        },
+        {
+            "type": "file",
+            "name": "api/images/debug-moderate.php",
+            "size": 9465,
+            "hash": "5021723b811dab3c323ea217490de2061a9934e18321297eeb1c51f34a8505ce"
+        },
+        {
+            "type": "file",
+            "name": "api/images/debug-upload-test.php",
+            "size": 11056,
+            "hash": "f87e335d4bbb15725d788c4c0e886bbdfb69e5b9203b67e7cac64f1c23b8d33d"
+        },
+        {
+            "type": "file",
+            "name": "api/images/moderate-and-upload.php",
+            "size": 84684,
+            "hash": "97ebec8f3feb80d65dad29122c1b4b8c036219a1349e72073a3f56b09b725d86"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-crash.php",
+            "size": 869,
+            "hash": "fca26eb845d44e9decebe90017769d5cd39fb62b2606952b68581fe686352930"
+        },
+        {
+            "type": "file",
+            "name": "api/images/debug-upload.php",
+            "size": 2308,
+            "hash": "609999ac446397470d4f355d42e1bd1e0633e6dbfc6ffffe12202d921002d546"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-logic.php",
+            "size": 1684,
+            "hash": "69e6a758dcd18c06c92f4f6079697a072523d857d29e1efb42ffca8736db291e"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-method.php",
+            "size": 1204,
+            "hash": "3e9fe70648bcc07af041aee7460216a0814a585ee71a7eac58cbe5c0dc8b6d26"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-minimal-upload.php",
+            "size": 1565,
+            "hash": "49ca5bea06376c3ab524c421986bd4217e1d7b1afdea756b57669c9c12e50b3c"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-upload-debug.php",
+            "size": 5521,
+            "hash": "44b39b04ab07dba9a6182b4e40fa2ff2901fd8e6e8caa082248cb0ba372b6e9f"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-upload-paths-html.php",
+            "size": 13427,
+            "hash": "a2ec59bee9b327481d20094b3bdfffd669a345fc73620eeffe6fca0ce6f37e7c"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-upload-paths.php",
+            "size": 8184,
+            "hash": "adb458a4f1b127912a0cb0898f6b56206e39f4f4f3494c3ddd5f3478537a8550"
+        },
+        {
+            "type": "file",
+            "name": "api/images/test-upload.php",
+            "size": 1072,
+            "hash": "2e4e6880a5d4da36922af22d1b6597e03742e253a471cd9e5efb47af3bca8fec"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/msg91-send.php",
+            "size": 2940,
+            "hash": "dbe52d6e5fdba096c20aab3c737e1d9b8427dfcedc146283b07d08d2f236e287"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/resend-sms.php",
+            "size": 191,
+            "hash": "0b5ec1406a505b01633cfacb553196a6fa403030a8242b03a4b38f6a95cecd93"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/msg91-verify.php",
+            "size": 3226,
+            "hash": "d37aaac90741eca0f4b2b590b0fcb654f50aa86f3f7c9cdf4ae727d1328e7279"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/send-email.php",
+            "size": 5247,
+            "hash": "2c556b4da612038a02881d73ce6802fdc0dd675ea7b2d35112c4d15e6c11e9cf"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/send-sms.php",
+            "size": 2973,
+            "hash": "8971d2107c0058d5bcf70c06308d6811bb742bccae270e1a7ca33d730a973840"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/verify-email.php",
+            "size": 2881,
+            "hash": "3174b3e1ec776d8ba0ec196cb7f86c572da57842b8e63b8473e12ea372ddebc4"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/verify-msg91-token.php",
+            "size": 3478,
+            "hash": "5c17c17028a063cfe1585135afdff7cb45eba10d034b049fbf341ef8b8a2fea0"
+        },
+        {
+            "type": "file",
+            "name": "api/otp/verify-sms.php",
+            "size": 2012,
+            "hash": "b15252e25f692bf645b16ef181a10f2b1628a6bafee60bf9165268b0e01e7c8c"
+        },
+        {
+            "type": "file",
+            "name": "api/payment/create-order.php",
+            "size": 3824,
+            "hash": "e376420406dc919f6bb5a613ee652495cb00f465404bd97f2603daf484b5a54a"
+        },
+        {
+            "type": "file",
+            "name": "api/payment/verify.php",
+            "size": 4571,
+            "hash": "f00510199981a260b5904b712f0a46dc0198e9abb83b33942394a606357a9d91"
+        },
+        {
+            "type": "file",
+            "name": "api/public/stats.php",
+            "size": 3503,
+            "hash": "1673053c1421eec31be19e16b9962bb431f61670b5d7136c5ad26be83c647c33"
+        },
+        {
+            "type": "file",
+            "name": "api/public/config.php",
+            "size": 656,
+            "hash": "ba9a4c42318b2c1631810d813f6f96ddb3cb84676690a61794f10734acdf1861"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/buyers"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/dashboard"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/leads"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/inquiries"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/profile"
+        },
+        {
+            "type": "folder",
+            "name": "api/seller/properties"
+        },
+        {
+            "type": "file",
+            "name": "api/upload/profile-image.php",
+            "size": 5857,
+            "hash": "2d0231752d9943cf59ead43b8f22208043d68d970c3c66b2bae34df07a888ba4"
+        },
+        {
+            "type": "file",
+            "name": "api/upload/property-files.php",
+            "size": 14487,
+            "hash": "6bbbc0be460f018c5caad8d44e410ad3b885247fb990226baa5714964c532b36"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/agents/list.php",
+            "size": 6857,
+            "hash": "24475df2273073602bf5b738cd1c8f2d577aa01b50c0ff3145dc97ff32733cdd"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/agents/unverify.php",
+            "size": 1544,
+            "hash": "5933499fd866e6ba7a71013ffa04d7dabce3c631a442d064d05283cbc24ff1d2"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/agents/verify.php",
+            "size": 1613,
+            "hash": "d5f0e6f5b1ec3eb447d7a6f1e0a35d0fc75071368011848a4be4d2ad4f15d2be"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/change-password.php",
+            "size": 2267,
+            "hash": "48ee25aa379fc723da82029dbc5ff955843af653b06df949576fcd1fb12e2af3"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/check-2fa-status.php",
+            "size": 2502,
+            "hash": "f39dd0bae9148981c09276f5b78727618862c92e98b63e30e210e3ba755cc6ee"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/check-msg91-response.php",
+            "size": 1817,
+            "hash": "470365ef7707d5c9fdfbb0a32bc0a817367d09f1520f4a4248872287d6c53b24"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/check-password.php",
+            "size": 1689,
+            "hash": "7e3f3de034aa8cc002c7d7e39354c5c946d68071c1899dacfb431bd15d11c1cd"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/audit-logs/list.php",
+            "size": 2905,
+            "hash": "aa0a61b104e1ea010efc6e3ff4c2c87a414bdc7fdd8d2b5a58e97168a2a020ef"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/check-session.php",
+            "size": 1452,
+            "hash": "4eba4d0b56a0e9115c76de955298f9279c8413440190f25dea50a10f462dabd7"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/debug-otp.php",
+            "size": 5894,
+            "hash": "7700776c25577d75d9d75bc2311492174ea086d4b4e40f243798a66203f8b3d5"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/debug-session.php",
+            "size": 2146,
+            "hash": "158b3a87b735cb83b7575900c7d56d0d146b1c2c0fbb74dc7209bd4d664b791d"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/diagnose-login.php",
+            "size": 4372,
+            "hash": "988ad1cc60db87e55875c33fa568ab3a5afc0a5646933f361c052512022dfdb7"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/fix-admin-2fa-columns.php",
+            "size": 5165,
+            "hash": "a877888fcd0e4f60d1af7c85ceeca810c25b88cbd83042efefb8a9833f8f033d"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/generate-password-hash.php",
+            "size": 544,
+            "hash": "7594ddaec22611c83fa4c88a29e710c1a517044e2503e80ba35147bf70a1fdd1"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/login.php",
+            "size": 7307,
+            "hash": "3a677379a77b054383763998252105b7f5c8977933856c7e701ebfed9f2466a4"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/fix-admin-password.php",
+            "size": 4127,
+            "hash": "9144ed57b225f0e6afb90a64dcdd8f553e10ecab148becb4e6757962f973bd78"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/logout.php",
+            "size": 778,
+            "hash": "db1192166e51e221bd9011e7de833d93a5a12e0a5acb238b37937a8b8c6dd856"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/resend-otp.php",
+            "size": 4462,
+            "hash": "4677c1e82708df2feebb2ef0cd02dac149a6e83dc73a9e4bd7d45aed558c3b57"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/send-otp-test.php",
+            "size": 2537,
+            "hash": "b7326f3e0c87641b7200da48dfb47f8aaf774de562c8cf79e4367d075eadc9a4"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/send-otp.php",
+            "size": 11375,
+            "hash": "92bbca686e7d5804197aefd0d85b6f0ec923bda1d873b762c7df67d87fecfff4"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/setup-2fa.php",
+            "size": 8672,
+            "hash": "4c96b56e356cb296aa2c112228ee0eb2cdf83ecac28f6eeac365a867b85048af"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/test-2fa.php",
+            "size": 2078,
+            "hash": "97ea36949292dcbbf1fcd2192e4db41ef5fe4d0b69038986850c356f970e7ca1"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/setup-admin.php",
+            "size": 1738,
+            "hash": "f5fc6782a6120f5d63f4185ac1dcedf7b12f99e06f4c766c5585ce4ea79a1a0c"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/test-login-browser.html",
+            "size": 3393,
+            "hash": "8a399df5dc85a691a71e0b3900223c4e00ea912eadc7c87a90cfff80bacfc206"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/test-login.php",
+            "size": 2974,
+            "hash": "b6ca744f29e021f8f9bb2f362008f63b006870cad31f89df3a5d51f80af0066e"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/test-msg91.php",
+            "size": 1392,
+            "hash": "0d8d0af342a8bc6bb18b0d94a219f8431106dd4f677515b4af69cd63a565a350"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/test-session-create.php",
+            "size": 2815,
+            "hash": "437a62ffd2291fd77f380d9f281d7c208fefbbb6246b00b118968cb60acda21c"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/update-admin-password.php",
+            "size": 1595,
+            "hash": "2f934e5627fc9dc17e3c19e00eda73c2f300c1cf2b79360d7c1d2a5484e6189f"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/validate-mobile.php",
+            "size": 3859,
+            "hash": "f87ad57cec1e6b42b1d18418c4bf5adb37b62447de9d828cc63bfba40a549847"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify-2fa-setup.php",
+            "size": 6036,
+            "hash": "295f37b84255402ca733900225a123ccf2cc92ab07dc605dfb1b8181f073ae51"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify-otp.php",
+            "size": 26470,
+            "hash": "c931e87cbc05481222d92a521c822a67d70595cc40ed64f67f50cd507122a70d"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify-pin.php",
+            "size": 2780,
+            "hash": "0dbc2f9f45b9066d123c9f4de8af661f1b9034aeccb973d2ebe44ca76dafe6a6"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify-widget-token.php",
+            "size": 9335,
+            "hash": "4f834d13ee9f565a022fa65b6005de298d7bbec764ad2fc54257bc8d084f70c5"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify.php",
+            "size": 1451,
+            "hash": "6942393eaa114389bb8a6d71b16b986772d2d970a560093841008da8e33140a8"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/auth/verify-secret-saved.php",
+            "size": 2615,
+            "hash": "68dafc7197c2c8e259a52cf15df4b94b3258c7c9939c2ce8d2aedc3a75b88d7f"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/dashboard/stats.php",
+            "size": 6703,
+            "hash": "44287ee02c0cf57ba429a33a7213237cc1f000ac1106106d150f279e9f4026fb"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/inquiries/list.php",
+            "size": 5433,
+            "hash": "aa46c35c6f7b4d2e55080c273e44d4156930023bcb421b27b250df2830a670a7"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/leads/list.php",
+            "size": 3170,
+            "hash": "5a473fbf3ad8f28f0cdb02606a176e2a55153e1469ca4dbd60c144752504362f"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/moderation-queue/approve.php",
+            "size": 4805,
+            "hash": "eab6d8ba15c0af37b7edaefb2e4fea2b9c4b4d45b699fb6a29ce287de13d01f6"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/moderation-queue/list.php",
+            "size": 3403,
+            "hash": "16e1981ce5018047207d80bb51d286a3816b7e258b51698916a0c572b88e8ae1"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/moderation-queue/reject.php",
+            "size": 4411,
+            "hash": "9ee63cd63bfca16a052764a5f7f3378a710a601ecbcb0660d2a5ecbddf2c0f0b"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/properties/approve.php",
+            "size": 1458,
+            "hash": "c4509e1efbf4234317be8a58de9c7bd21339833b7a27f794a39330c6c2239cb9"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/properties/delete.php",
+            "size": 1458,
+            "hash": "1f2e1b2c7a3c12a9cbc2057451fff72df70886f39e34c5850eb83e5ef89d52ba"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/properties/list.php",
+            "size": 7414,
+            "hash": "cbfbef7dcad7088392302732d995eb1961faa17787b41edcbd84eb639687538d"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/properties/reject.php",
+            "size": 1652,
+            "hash": "7f361c32b85f48c0939d6584ee1ed54a055a086c2ea9f915994c202eef531e77"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/subscriptions/list.php",
+            "size": 4234,
+            "hash": "e3f78426558b441fcdce5dd3a8f8a2746cc3423b8906d3edb8ef015fbf22d09b"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/support/list.php",
+            "size": 4164,
+            "hash": "e86e33dd07a47bc80040c871b7ef2e0fa959bdd47c9f6bb4e5343ddbc6cb71d6"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/support/update-status.php",
+            "size": 2616,
+            "hash": "b1a00c74ec5f81f3a2815db27569f976d6184c9c1d63e364ec9ec790b15f80f6"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/check-table.php",
+            "size": 1808,
+            "hash": "f62b1fdcf0a5ed1e4a95670372ca1a5983483cb884158c558cc5602bc8e9d494"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/debug.php",
+            "size": 3298,
+            "hash": "fb3ccf190f03b83dd8564f14abb14a39d91e09ff9d1f73e2d90baa30e6d2e2b9"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/list.php",
+            "size": 7780,
+            "hash": "7fb60254ca1d7e53519d54dc8abfd4065a88be7c5e910cb1704263d488f1995d"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/simple-test.php",
+            "size": 1627,
+            "hash": "e5ca9ec9fb9c52d9fc1c08fdabc8dd5c116e956718b3ce33413c9ff2eb38529b"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/delete.php",
+            "size": 1252,
+            "hash": "496aa63d1a0687a47a115f529030cd7edd194f845ae3154a2399454b8143ebd0"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/test.php",
+            "size": 1843,
+            "hash": "75b21d2c085965647f80837af3b2f5d75da65431f77fc60e4ebb0399f775b760"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/update.php",
+            "size": 2371,
+            "hash": "8c2dc70f9bff3ea2e542c74eb474e0b196d512dfa4add33b62cb4315ac51949e"
+        },
+        {
+            "type": "file",
+            "name": "api/admin/users/verify-db.php",
+            "size": 4225,
+            "hash": "a2a67a376c4804245daa94a2cf3f8d36049f8f126faa16e611a6104d7da502f6"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/favorites/list.php",
+            "size": 2557,
+            "hash": "8f2def6a245c9bf8189d51d9aa2d252e464d7f1f37208c0883156150e1fc33af"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/favorites/toggle.php",
+            "size": 1886,
+            "hash": "3ee63d14013ddf96f9ea43276c4692f5948c0c9ef469228d5842a737987d7d8c"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/history/add.php",
+            "size": 3482,
+            "hash": "ed571d0eafd7d0f5e670ba2ab9350110d5f994711b00d19f6f7f2a748eee6be2"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/history/list.php",
+            "size": 3564,
+            "hash": "100df4e6abe165e0667dcdf6443a8c7a9ccc2eae5071b1f7814d72cd020c81c9"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/inquiries/send.php",
+            "size": 4397,
+            "hash": "3caf0690c6c661a9a9b50d4aa719c48b9698929fa7ca7329af4561d9baab012d"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/interactions/check.php",
+            "size": 6201,
+            "hash": "1791bb94f6516a2fe94fc1ec66c86408d65a5c08425e5a6bba253323042f7e1d"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/interactions/record.php",
+            "size": 9518,
+            "hash": "7d41d7eaa017cdc4705772f6178c4be8e4082e07eb3c75d5cc21b9ef1f10fe4b"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/profile/get.php",
+            "size": 2493,
+            "hash": "4b4b34275ff5fb018141247d5ec035edbbbedecb9857aafc975209d6afd7acd1"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/profile/update.php",
+            "size": 8849,
+            "hash": "947cc12d9c78fac71fa5e97d27f18bccf1f9d5e7a0436d92b9f994d57ba31d3f"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/properties/details.php",
+            "size": 10627,
+            "hash": "a0363a5cb669ed055ee3732de90367bfea14f5c34cbf584cf7b07bb2145d756a"
+        },
+        {
+            "type": "file",
+            "name": "api/buyer/properties/list.php",
+            "size": 25280,
+            "hash": "e5018287af5037cfc2d102bd77f9b769dc2cdff0721db1b89d77944210caa999"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/dashboard/stats.php",
+            "size": 4784,
+            "hash": "8bfbdaeae8378cb828c4912074ac3a1f2067747b6dcadd9534639ef1ddb0e0da"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/buyers/get.php",
+            "size": 2297,
+            "hash": "644f99e8ae0e09d510ce8f4cda004b35762073aa4be0acae06ca8738cd85e797"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/leads/list.php",
+            "size": 3948,
+            "hash": "3d2bca871493cfe5845b6a3736edc892efd7f9ccf8c93b39a95691abd41cd03a"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/inquiries/updateStatus.php",
+            "size": 1886,
+            "hash": "2b74f497c3fdf58a147ba568401e8be67e2ed82b1c36c4baaf4a0c0da1dbbc26"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/inquiries/list.php",
+            "size": 7509,
+            "hash": "97818926da351ffdc37ed14e76f5018ec0d18be76ffd61d3fd558218eb9cae47"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/profile/get.php",
+            "size": 3881,
+            "hash": "d0a06793934579ff98031204d84e77c2780a0eb31d9c27435dc25c2fa2ee8fc7"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/profile/update.php",
+            "size": 9328,
+            "hash": "94f0586562416d26e20b5b0f67eb6ecf8c0b7dac96ddfb5160dc7a880a395414"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/properties/add.php",
+            "size": 35567,
+            "hash": "fb6ccd5011d121460f63a72285e8c37ca967c330ef2f48118a9895838b19363f"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/properties/delete.php",
+            "size": 1705,
+            "hash": "584bbe404ba714207a53fcd91f0f3949a2802b16b9ae669966e8ddac78c080e4"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/properties/list.php",
+            "size": 9960,
+            "hash": "b76d176b6b56162d42d69575d8b844dc075aa2d7982a1f43fa74ddfd7cc954b4"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/properties/test-add.php",
+            "size": 2536,
+            "hash": "636c24a597703f869d6f1f11d61eb94a34c8da753494422781ffaf284bb21383"
+        },
+        {
+            "type": "file",
+            "name": "api/seller/properties/update.php",
+            "size": 31750,
+            "hash": "28353893b2dc350f4379c3dc3ee349b32c4cbb2592d810fb3b0fa99d39ef2c19"
+        }
+    ]
+}
