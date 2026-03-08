@@ -22,6 +22,22 @@ import LocationAutoSuggest from "../../components/LocationAutoSuggest";
 import StateAutoSuggest from "../../components/StateAutoSuggest";
 import PropertyUploadSuccessModal from "../../components/PropertyUploadSuccessModal/PropertyUploadSuccessModal";
 import { useAutoScrollForm } from "../../hooks/useAutoScrollForm";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import "../styles/AddPropertyPopup.css";
 
 const STEPS = [
@@ -48,6 +64,117 @@ const PROPERTY_TYPES = [
 
 // Property types that hide "Floor Number" (Total Floors still shown)
 const PROPERTY_TYPES_HIDE_FLOOR_NUMBER = ['Villa / Banglow', 'Independent House', 'Row House/ Farm House'];
+
+// Sortable image item for drag-and-drop reordering
+const SortableImageItem = ({ id, idx, src, validationStatus, removeImage, isRestrictedEdit }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`preview-item image-validation-item ${validationStatus.status} ${isDragging ? 'dragging' : ''}`}
+    >
+      <div className="sortable-drag-handle" {...attributes} {...listeners} title="Drag to reorder">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="9" cy="6" r="1.5" />
+          <circle cx="15" cy="6" r="1.5" />
+          <circle cx="9" cy="12" r="1.5" />
+          <circle cx="15" cy="12" r="1.5" />
+          <circle cx="9" cy="18" r="1.5" />
+          <circle cx="15" cy="18" r="1.5" />
+        </svg>
+      </div>
+      <img src={src} alt={`Preview ${idx + 1}`} />
+      {idx === 0 && <span className="cover-badge">Cover</span>}
+
+      {validationStatus.status === 'checking' && (
+        <div className="validation-overlay checking-overlay">
+          <div className="overlay-content">
+            <p className="status-message-text">Checking...</p>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'approved' && (
+        <div className="validation-overlay approved-overlay">
+          <div className="overlay-content">
+            <svg className="checkmark" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="approved-text">Approved</p>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'rejected' && (
+        <div className="validation-overlay rejected-overlay">
+          <div className="overlay-content">
+            <svg className="x-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <p className="rejected-title">REJECTED</p>
+            <p className="rejected-message">{validationStatus.errorMessage || 'Image rejected'}</p>
+            <button
+              type="button"
+              className="remove-rejected-btn"
+              onClick={() => !isRestrictedEdit && removeImage(idx)}
+              disabled={isRestrictedEdit}
+            >
+              Remove & Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'approved' && (
+        <div className="status-badge approved-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
+
+      {validationStatus.status === 'rejected' && (
+        <div className="status-badge rejected-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
+
+      {validationStatus.status !== 'checking' && (
+        <button
+          type="button"
+          className="remove-image-btn"
+          onClick={() => !isRestrictedEdit && removeImage(idx)}
+          disabled={isRestrictedEdit}
+          title="Remove image"
+          style={{
+            opacity: isRestrictedEdit ? 0.5 : 1,
+            cursor: isRestrictedEdit ? 'not-allowed' : 'pointer',
+            zIndex: 20
+          }}
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+};
 
 // Property type field configurations - based on real-world requirements
 const PROPERTY_TYPE_FIELDS = {
@@ -310,6 +437,7 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
   const [cameraFacingMode, setCameraFacingMode] = useState('environment'); // 'environment' (rear) or 'user' (front)
   const fileRef = useRef();
   const videoRef = useRef(null);
+  const videoFileRef = useRef(null);
   const canvasRef = useRef(null);
   const popupBodyRef = useRef(null);
   const popupContainerRef = useRef(null);
@@ -390,6 +518,7 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       seats: "", pricePerSeat: "",
       amenities: [], description: "",
       images: [],
+      video: null,
       price: "", priceNegotiable: false, maintenanceCharges: "", depositAmount: "", availableForBachelors: false
     };
     if (!initialData) return { ...base, propertyStatus: "", age: "" };
@@ -398,6 +527,43 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     const derivedAge = age === "New Construction" ? "" : age;
     return { ...base, propertyStatus, age: derivedAge };
   });
+
+  // When opening in edit mode, ensure formData (images, state, additionalAddress) and imageValidationStatus are synced
+  useEffect(() => {
+    if (editIndex !== null && initialData) {
+      const updates = {};
+      // Sync state (handle both camelCase and snake_case from API) - always sync when editing
+      updates.state = initialData.state ?? initialData.State ?? '';
+      // Sync additionalAddress (handle both camelCase and snake_case from API) - always sync when editing
+      updates.additionalAddress = initialData.additionalAddress ?? initialData.additional_address ?? '';
+      // Sync images
+      if (initialData.images?.length > 0) {
+        const normalizeImgUrl = (img) =>
+          typeof img === 'string' ? img : (img?.url || img?.image_url || null);
+        const normalizedUrls = initialData.images
+          .map(normalizeImgUrl)
+          .filter(Boolean);
+        if (normalizedUrls.length > 0) {
+          updates.images = normalizedUrls;
+          const existingImageStatus = initialData.images.map((img) => {
+            const url = normalizeImgUrl(img);
+            return {
+              file: null,
+              preview: url,
+              status: 'approved',
+              errorMessage: '',
+              imageId: null,
+              imageUrl: url || null
+            };
+          });
+          setImageValidationStatus(existingImageStatus);
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        setFormData((prev) => ({ ...prev, ...updates }));
+      }
+    }
+  }, [editIndex, initialData]);
 
   // Reset all form state (for hard discard)
   const resetFormState = useCallback(() => {
@@ -426,6 +592,7 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       amenities: [],
       description: "",
       images: [],
+      video: null,
       price: "",
       priceNegotiable: false,
       maintenanceCharges: "",
@@ -436,13 +603,28 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     setErrors({});
     setStepError(null);
     setImageFiles([]);
-    setImageValidationStatus([]);
+    if (editIndex !== null && initialData?.images?.length > 0) {
+      const existingImageStatus = initialData.images.map(img => {
+        const url = typeof img === 'string' ? img : (img?.url || img?.image_url);
+        return {
+          file: null,
+          preview: url,
+          status: 'approved',
+          errorMessage: '',
+          imageId: null,
+          imageUrl: url || null
+        };
+      });
+      setImageValidationStatus(existingImageStatus);
+    } else {
+      setImageValidationStatus([]);
+    }
     setIsCheckingImages(false);
     setStateAutoFilled(false);
     setIsSubmitting(false);
     setUploadingImages(false);
     setIsPublished(false);
-  }, [initialData]);
+  }, [initialData, editIndex]);
 
   // Handle discard and close - HARD DISCARD
   const handleDiscardAndClose = useCallback(() => {
@@ -1052,6 +1234,56 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     setImageValidationStatus(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const reorderImages = (oldIndex, newIndex) => {
+    if (oldIndex === newIndex) return;
+    setFormData(prev => ({
+      ...prev,
+      images: arrayMove(prev.images || [], oldIndex, newIndex)
+    }));
+    setImageFiles(prev => arrayMove(prev, oldIndex, newIndex));
+    setImageValidationStatus(prev => arrayMove(prev, oldIndex, newIndex));
+  };
+
+  const handleImageDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = parseInt(String(active.id).replace('img-', ''), 10);
+    const newIndex = parseInt(String(over.id).replace('img-', ''), 10);
+    if (!isNaN(oldIndex) && !isNaN(newIndex)) {
+      reorderImages(oldIndex, newIndex);
+    }
+  };
+
+  const imageSortableSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleVideoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v", "video/ogg"];
+    if (!allowed.includes(file.type)) {
+      setErrors(prev => ({ ...prev, video: "Unsupported video format. Use MP4, WEBM, or MOV" }));
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, video: "Video must be 50MB or less" }));
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, video: { file, url, name: file.name, size: file.size } }));
+    setErrors(prev => ({ ...prev, video: null }));
+  };
+
+  const removeVideo = () => {
+    if (formData.video?.url) URL.revokeObjectURL(formData.video.url);
+    setFormData(prev => ({ ...prev, video: null }));
+    setErrors(prev => ({ ...prev, video: null }));
+  };
+
   const validateStep = async (step) => {
     const newErrors = {};
     let stepErrorMessage = null;
@@ -1265,7 +1497,10 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
           formData.images?.length || 0
         );
 
-        if (uploadedImageCount === 0) {
+        if (uploadedImageCount > 10) {
+          newErrors.images = "Maximum 10 images allowed. Please remove extra images.";
+          stepErrorMessage = "Maximum 10 images allowed. Please remove extra images.";
+        } else if (uploadedImageCount === 0) {
           newErrors.images = "Upload at least 3 property images (minimum 3 required)";
           stepErrorMessage = "Upload at least 3 property images (minimum 3 required)";
         } else if (uploadedImageCount < 3) {
@@ -2689,8 +2924,8 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
           ⚠️ This property was created more than 24 hours ago. You can only edit the <strong>Title</strong> and <strong>Price-related fields</strong>. Location-related fields (location, state, additional address) and all other fields are locked.
         </div>
       )}
-      <h3 className="step-heading">Upload Photos</h3>
-      <p className="step-subheading">Add up to 10 high-quality photos of your property (minimum 3 required)</p>
+      <h3 className="step-heading">Upload Photos & Video</h3>
+      <p className="step-subheading">Add up to 10 high-quality photos of your property (minimum 3 required). Video is optional.</p>
       {stepError && <span className="seller-popup-error-text seller-popup-step-error">{stepError}</span>}
 
       <div
@@ -2720,10 +2955,61 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
       </div>
       {errors.images && <span className="seller-popup-error-text center">{errors.images}</span>}
 
+      {/* Video Upload (Optional) */}
+      <div
+        className={`upload-zone seller-video-upload-zone ${errors.video ? 'error' : ''}`}
+        onClick={() => !isRestrictedEdit && videoFileRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => !isRestrictedEdit && (e.key === 'Enter' || e.key === ' ') && videoFileRef.current?.click()}
+        style={{ marginTop: '1rem', opacity: isRestrictedEdit ? 0.5 : 1, cursor: isRestrictedEdit ? 'not-allowed' : 'pointer' }}
+      >
+        <input
+          ref={videoFileRef}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg"
+          onChange={handleVideoUpload}
+          style={{ display: 'none' }}
+        />
+        <div className="upload-content">
+          <div className="seller-popup-upload-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M23 7l-7 5 7 5V7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </div>
+          <h4>Upload Video (Optional)</h4>
+          <p>MP4, WEBM, MOV — Max 50MB</p>
+          <span className="seller-popup-upload-hint">Showcase your property with a walkthrough video</span>
+        </div>
+      </div>
+      {errors.video && <span className="seller-popup-error-text center">{errors.video}</span>}
+
+      {formData.video && (
+        <div className="seller-video-preview" style={{ marginTop: '1rem' }}>
+          <div className="preview-item" style={{ maxWidth: '320px' }}>
+            <video controls src={formData.video.url} className="seller-video-preview-player" style={{ width: '100%', borderRadius: '8px' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', padding: '0 4px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{formData.video.name} ({(formData.video.size / 1024 / 1024).toFixed(2)} MB)</span>
+              <button
+                type="button"
+                className="remove-image-btn"
+                onClick={() => !isRestrictedEdit && removeVideo()}
+                disabled={isRestrictedEdit}
+                title="Remove video"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {formData.images?.length > 0 && (
         <div className="image-preview-section">
           <div className="preview-header">
             <span>Uploaded Photos ({formData.images.length}/10)</span>
+            <span className="drag-hint">Drag to reorder — first image is cover</span>
             <button
               type="button"
               className="add-more-btn"
@@ -2734,92 +3020,33 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
               + Add More
             </button>
           </div>
-          <div className="image-preview-grid">
-            {formData.images.map((src, idx) => {
-              const validationStatus = imageValidationStatus[idx] || { status: 'pending', errorMessage: '' };
-              return (
-                <div key={idx} className={`preview-item image-validation-item ${validationStatus.status}`}>
-                  <img src={src} alt={`Preview ${idx + 1}`} />
-                  {idx === 0 && <span className="cover-badge">Cover</span>}
-
-                  {/* Simple Status Overlay */}
-                  {validationStatus.status === 'checking' && (
-                    <div className="validation-overlay checking-overlay">
-                      <div className="overlay-content">
-                        <p className="status-message-text">Checking...</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'approved' && (
-                    <div className="validation-overlay approved-overlay">
-                      <div className="overlay-content">
-                        <svg className="checkmark" width="32" height="32" viewBox="0 0 24 24" fill="none">
-                          <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <p className="approved-text">Approved</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'rejected' && (
-                    <div className="validation-overlay rejected-overlay">
-                      <div className="overlay-content">
-                        <svg className="x-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
-                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                        <p className="rejected-title">REJECTED</p>
-                        <p className="rejected-message">{validationStatus.errorMessage || 'Image rejected'}</p>
-                        <button
-                          type="button"
-                          className="remove-rejected-btn"
-                          onClick={() => !isRestrictedEdit && removeImage(idx)}
-                          disabled={isRestrictedEdit}
-                        >
-                          Remove & Try Again
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status Badge */}
-                  {validationStatus.status === 'approved' && (
-                    <div className="status-badge approved-badge">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'rejected' && (
-                    <div className="status-badge rejected-badge">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Remove Button - ALWAYS visible (except when checking) */}
-                  {validationStatus.status !== 'checking' && (
-                    <button
-                      type="button"
-                      className="remove-image-btn"
-                      onClick={() => !isRestrictedEdit && removeImage(idx)}
-                      disabled={isRestrictedEdit}
-                      title="Remove image"
-                      style={{
-                        opacity: isRestrictedEdit ? 0.5 : 1,
-                        cursor: isRestrictedEdit ? 'not-allowed' : 'pointer',
-                        zIndex: 20
-                      }}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <DndContext
+            sensors={imageSortableSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleImageDragEnd}
+          >
+            <SortableContext
+              items={formData.images.map((_, idx) => `img-${idx}`)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="image-preview-grid">
+                {formData.images.map((src, idx) => {
+                  const validationStatus = imageValidationStatus[idx] || { status: 'pending', errorMessage: '' };
+                  return (
+                    <SortableImageItem
+                      key={`img-${idx}`}
+                      id={`img-${idx}`}
+                      idx={idx}
+                      src={src}
+                      validationStatus={validationStatus}
+                      removeImage={removeImage}
+                      isRestrictedEdit={isRestrictedEdit}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {/* Warning if rejected images exist */}
           {imageValidationStatus.some(img => img.status === 'rejected') && (
@@ -3027,6 +3254,12 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
             <span className="seller-popup-summary-label">Photos</span>
             <span className="seller-popup-summary-value">
               {formData.images?.length || 0} uploaded
+            </span>
+          </div>
+          <div className="seller-popup-summary-item">
+            <span className="seller-popup-summary-label">Video</span>
+            <span className="seller-popup-summary-value">
+              {formData.video ? formData.video.name : '—'}
             </span>
           </div>
         </div>

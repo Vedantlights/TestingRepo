@@ -9,6 +9,22 @@ import LocationAutoSuggest from "../../components/LocationAutoSuggest";
 import StateAutoSuggest from "../../components/StateAutoSuggest";
 import PropertyUploadSuccessModal from "../../components/PropertyUploadSuccessModal/PropertyUploadSuccessModal";
 import { useAutoScrollForm } from "../../hooks/useAutoScrollForm";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import "../styles/AddPropertyPopup.css";
 
 const STEPS = [
@@ -33,6 +49,113 @@ const PROPERTY_TYPES = [
   { value: "Commercial Shop", icon: "🏪", category: "commercial", subCategory: "shop" },
   { value: "PG / Hostel", icon: "🛏️", category: "pg", subCategory: "accommodation" }
 ];
+
+// Sortable image item for drag-and-drop reordering
+const SortableImageItem = ({ id, idx, src, validationStatus, removeImage, isRestrictedEdit }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`preview-item image-validation-item ${validationStatus.status} ${isDragging ? 'dragging' : ''}`}
+    >
+      <div className="sortable-drag-handle" {...attributes} {...listeners} title="Drag to reorder">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="9" cy="6" r="1.5" />
+          <circle cx="15" cy="6" r="1.5" />
+          <circle cx="9" cy="12" r="1.5" />
+          <circle cx="15" cy="12" r="1.5" />
+          <circle cx="9" cy="18" r="1.5" />
+          <circle cx="15" cy="18" r="1.5" />
+        </svg>
+      </div>
+      <img src={src} alt={`Preview ${idx + 1}`} />
+      {idx === 0 && <span className="cover-badge">Cover</span>}
+
+      {validationStatus.status === 'checking' && (
+        <div className="validation-overlay checking-overlay">
+          <div className="overlay-content">
+            <div className="spinner"></div>
+            <p className="status-message-text">Checking...</p>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'approved' && (
+        <div className="validation-overlay approved-overlay">
+          <div className="overlay-content">
+            <svg className="checkmark" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="approved-text">Approved</p>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'rejected' && (
+        <div className="validation-overlay rejected-overlay">
+          <div className="overlay-content">
+            <svg className="x-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <p className="rejected-title">REJECTED</p>
+            <p className="rejected-message">{validationStatus.errorMessage || 'Image rejected'}</p>
+            <button
+              type="button"
+              className="remove-rejected-btn"
+              onClick={() => !isRestrictedEdit && removeImage(idx)}
+              disabled={isRestrictedEdit}
+            >
+              Remove & Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {validationStatus.status === 'approved' && (
+        <div className="status-badge approved-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
+
+      {validationStatus.status === 'rejected' && (
+        <div className="status-badge rejected-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
+
+      {validationStatus.status !== 'checking' && (
+        <button
+          type="button"
+          className="remove-image-btn"
+          onClick={() => !isRestrictedEdit && removeImage(idx)}
+          disabled={isRestrictedEdit}
+          title="Remove image"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+};
 
 // Property type field configurations - based on real-world requirements
 const PROPERTY_TYPE_FIELDS = {
@@ -330,6 +453,43 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     return { ...base, propertyStatus, age: derivedAge };
   });
 
+  // When opening in edit mode, ensure formData (images, state, additionalAddress) and imageValidationStatus are synced
+  useEffect(() => {
+    if (editIndex !== null && initialData) {
+      const updates = {};
+      // Sync state (handle both camelCase and snake_case from API) - always sync when editing
+      updates.state = initialData.state ?? initialData.State ?? '';
+      // Sync additionalAddress (handle both camelCase and snake_case from API) - always sync when editing
+      updates.additionalAddress = initialData.additionalAddress ?? initialData.additional_address ?? '';
+      // Sync images
+      if (initialData.images?.length > 0) {
+        const normalizeImgUrl = (img) =>
+          typeof img === 'string' ? img : (img?.url || img?.image_url || null);
+        const normalizedUrls = initialData.images
+          .map(normalizeImgUrl)
+          .filter(Boolean);
+        if (normalizedUrls.length > 0) {
+          updates.images = normalizedUrls;
+          const existingImageStatus = initialData.images.map((img) => {
+            const url = normalizeImgUrl(img);
+            return {
+              file: null,
+              preview: url,
+              status: 'approved',
+              errorMessage: '',
+              imageId: null,
+              imageUrl: url || null
+            };
+          });
+          setImageValidationStatus(existingImageStatus);
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        setFormData((prev) => ({ ...prev, ...updates }));
+      }
+    }
+  }, [editIndex, initialData]);
+
   // Reset all form state (for hard discard)
   const resetFormState = useCallback(() => {
     setFormData(initialData || {
@@ -369,13 +529,28 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     setErrors({});
     setStepError(null);
     setImageFiles([]);
-    setImageValidationStatus([]);
+    if (editIndex !== null && initialData?.images?.length > 0) {
+      const existingImageStatus = initialData.images.map(img => {
+        const url = typeof img === 'string' ? img : (img?.url || img?.image_url);
+        return {
+          file: null,
+          preview: url,
+          status: 'approved',
+          errorMessage: '',
+          imageId: null,
+          imageUrl: url || null
+        };
+      });
+      setImageValidationStatus(existingImageStatus);
+    } else {
+      setImageValidationStatus([]);
+    }
     setIsCheckingImages(false);
     setStateAutoFilled(false);
     setIsSubmitting(false);
     setUploadingImages(false);
     setIsPublished(false);
-  }, [initialData]);
+  }, [initialData, editIndex]);
 
   // Handle discard and close - HARD DISCARD
   const handleDiscardAndClose = useCallback(() => {
@@ -1113,6 +1288,31 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
     setImageValidationStatus(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const reorderImages = (oldIndex, newIndex) => {
+    if (oldIndex === newIndex) return;
+    setFormData(prev => ({
+      ...prev,
+      images: arrayMove(prev.images || [], oldIndex, newIndex)
+    }));
+    setImageFiles(prev => arrayMove(prev, oldIndex, newIndex));
+    setImageValidationStatus(prev => arrayMove(prev, oldIndex, newIndex));
+  };
+
+  const handleImageDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = parseInt(String(active.id).replace('img-', ''), 10);
+    const newIndex = parseInt(String(over.id).replace('img-', ''), 10);
+    if (!isNaN(oldIndex) && !isNaN(newIndex)) {
+      reorderImages(oldIndex, newIndex);
+    }
+  };
+
+  const imageSortableSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   // ---------- NEW: Video Handlers ----------
   const handleVideoUpload = (e) => {
     const file = e.target.files?.[0];
@@ -1348,7 +1548,10 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
           formData.images?.length || 0
         );
 
-        if (uploadedImageCount === 0) {
+        if (uploadedImageCount > 10) {
+          newErrors.images = "Maximum 10 images allowed. Please remove extra images.";
+          stepErrorMessage = "Maximum 10 images allowed. Please remove extra images.";
+        } else if (uploadedImageCount === 0) {
           newErrors.images = "Upload at least 3 property images";
           stepErrorMessage = "Upload at least 3 property images";
         } else if (uploadedImageCount < 3) {
@@ -1536,7 +1739,8 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
 
         // Images are already validated on selection (in validate_only mode)
         // Now upload them again with property ID to save to database
-        const approvedImages = imageValidationStatus.filter(img => img.status === 'approved');
+        // Only upload images that have a file (skip existing images from edit which have file: null)
+        const approvedImages = imageValidationStatus.filter(img => img.status === 'approved' && img.file);
 
         if (approvedImages.length > 0) {
           setUploadingImages(true);
@@ -2500,6 +2704,7 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         <div className="image-preview-section">
           <div className="preview-header">
             <span>Uploaded Photos ({formData.images.length}/10)</span>
+            <span className="drag-hint">Drag to reorder — first image is cover</span>
             <div>
               <button
                 type="button"
@@ -2511,89 +2716,33 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
               </button>
             </div>
           </div>
-          <div className="image-preview-grid">
-            {formData.images.map((src, idx) => {
-              const validationStatus = imageValidationStatus[idx] || { status: 'pending', errorMessage: '' };
-
-              return (
-                <div key={idx} className={`preview-item image-validation-item ${validationStatus.status}`}>
-                  <img src={src} alt={`Preview ${idx + 1}`} />
-                  {idx === 0 && <span className="cover-badge">Cover</span>}
-
-                  {/* Validation Overlays */}
-                  {validationStatus.status === 'checking' && (
-                    <div className="validation-overlay checking-overlay">
-                      <div className="overlay-content">
-                        <div className="spinner"></div>
-                        <p className="status-message-text">Checking...</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'approved' && (
-                    <div className="validation-overlay approved-overlay">
-                      <div className="overlay-content">
-                        <svg className="checkmark" width="32" height="32" viewBox="0 0 24 24" fill="none">
-                          <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <p className="approved-text">Approved</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'rejected' && (
-                    <div className="validation-overlay rejected-overlay">
-                      <div className="overlay-content">
-                        <svg className="x-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
-                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                        <p className="rejected-title">REJECTED</p>
-                        <p className="rejected-message">{validationStatus.errorMessage || 'Image rejected'}</p>
-                        <button
-                          type="button"
-                          className="remove-rejected-btn"
-                          onClick={() => !isRestrictedEdit && removeImage(idx)}
-                          disabled={isRestrictedEdit}
-                        >
-                          Remove & Try Again
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status Badge */}
-                  {validationStatus.status === 'approved' && (
-                    <div className="status-badge approved-badge">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {validationStatus.status === 'rejected' && (
-                    <div className="status-badge rejected-badge">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Remove Button - ALWAYS visible (except when checking) */}
-                  {validationStatus.status !== 'checking' && (
-                    <button
-                      type="button"
-                      className="remove-image-btn"
-                      onClick={() => !isRestrictedEdit && removeImage(idx)}
-                      disabled={isRestrictedEdit}
-                      title="Remove image"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <DndContext
+            sensors={imageSortableSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleImageDragEnd}
+          >
+            <SortableContext
+              items={formData.images.map((_, idx) => `img-${idx}`)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="image-preview-grid">
+                {formData.images.map((src, idx) => {
+                  const validationStatus = imageValidationStatus[idx] || { status: 'pending', errorMessage: '' };
+                  return (
+                    <SortableImageItem
+                      key={`img-${idx}`}
+                      id={`img-${idx}`}
+                      idx={idx}
+                      src={src}
+                      validationStatus={validationStatus}
+                      removeImage={removeImage}
+                      isRestrictedEdit={isRestrictedEdit}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {/* Warning if rejected images exist */}
           {imageValidationStatus.some(img => img.status === 'rejected') && (

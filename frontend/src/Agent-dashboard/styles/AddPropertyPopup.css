@@ -1306,6 +1306,39 @@
   border-radius: 4px;
 }
 
+/* Drag-and-drop reorder - z-index above validation overlays so handle stays clickable */
+.sortable-drag-handle {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 25;
+  transition: background var(--transition-fast);
+}
+.sortable-drag-handle:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.sortable-drag-handle:active {
+  cursor: grabbing;
+}
+.preview-item.dragging {
+  opacity: 0.7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.preview-header .drag-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+}
+
 .remove-btn {
   position: absolute;
   top: 6px;
