@@ -1435,12 +1435,14 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         }
         if (fieldConfig.bathroomsRequired && !formData.bathrooms) {
           newErrors.bathrooms = "Bedroom / Bathroom not selected";
-        } else if (formData.bathrooms && formData.bathrooms !== '4+') {
+        } else if (formData.bathrooms) {
+          const isPlusFormat = /^\d+\+$/.test(String(formData.bathrooms).trim());
           const bathroomsNum = parseInt(formData.bathrooms, 10);
           const minBathrooms = fieldConfig.bathroomsRequired ? 1 : 0;
-          if (isNaN(bathroomsNum) || bathroomsNum < minBathrooms || bathroomsNum > 10) {
-            newErrors.bathrooms = "Invalid bathroom count";
-          }
+          const valid = isPlusFormat
+            ? !isNaN(bathroomsNum) && bathroomsNum >= minBathrooms && bathroomsNum <= 10
+            : !isNaN(bathroomsNum) && bathroomsNum >= minBathrooms && bathroomsNum <= 10;
+          if (!valid) newErrors.bathrooms = "Invalid bathroom count";
         }
 
         if (fieldConfig.showBalconies && !formData.balconies) {

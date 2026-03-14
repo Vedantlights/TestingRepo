@@ -1373,20 +1373,24 @@ export default function AddPropertyPopup({ onClose, editIndex = null, initialDat
         if (fieldConfig.bedroomsRequired && !formData.bedrooms) {
           newErrors.bedrooms = "Bedroom / Bathroom not selected";
         } else if (formData.bedrooms) {
-          const bedroomsNum = parseInt(formData.bedrooms);
-          if (isNaN(bedroomsNum) || bedroomsNum < 0 || bedroomsNum > 10) {
-            newErrors.bedrooms = "Invalid bedroom count";
-          }
+          const isPlusFormat = /^\d+\+$/.test(String(formData.bedrooms).trim());
+          const bedroomsNum = parseInt(formData.bedrooms, 10);
+          const valid = isPlusFormat
+            ? !isNaN(bedroomsNum) && bedroomsNum >= 1 && bedroomsNum <= 10
+            : !isNaN(bedroomsNum) && bedroomsNum >= 0 && bedroomsNum <= 10;
+          if (!valid) newErrors.bedrooms = "Invalid bedroom count";
         }
 
         if (fieldConfig.bathroomsRequired && !formData.bathrooms) {
           newErrors.bathrooms = "Bedroom / Bathroom not selected";
-        } else if (formData.bathrooms && formData.bathrooms !== '4+') {
+        } else if (formData.bathrooms) {
+          const isPlusFormat = /^\d+\+$/.test(String(formData.bathrooms).trim());
           const bathroomsNum = parseInt(formData.bathrooms, 10);
           const minBathrooms = fieldConfig.bathroomsRequired ? 1 : 0;
-          if (isNaN(bathroomsNum) || bathroomsNum < minBathrooms || bathroomsNum > 10) {
-            newErrors.bathrooms = "Invalid bathroom count";
-          }
+          const valid = isPlusFormat
+            ? !isNaN(bathroomsNum) && bathroomsNum >= minBathrooms && bathroomsNum <= 10
+            : !isNaN(bathroomsNum) && bathroomsNum >= minBathrooms && bathroomsNum <= 10;
+          if (!valid) newErrors.bathrooms = "Invalid bathroom count";
         }
 
         if (fieldConfig.showBalconies && !formData.balconies) {

@@ -94,8 +94,13 @@ function validateRequired($data, $requiredFields) {
             $errors[$field] = ucfirst(str_replace('_', ' ', $field)) . ' is required';
         } elseif (in_array($field, $numericFields)) {
             // For numeric fields, check if it's null, empty string, or not a valid number (but allow 0)
+            // Bedrooms/bathrooms also allow "N+" format (e.g. "5+", "4+", "3+")
             $value = $data[$field];
-            if ($value === null || $value === '' || (!is_numeric($value) && $value !== 0 && $value !== '0')) {
+            $isEmpty = ($value === null || $value === '');
+            $isNumeric = is_numeric($value) || $value === 0 || $value === '0';
+            // Allow "N+" for bedrooms, bathrooms, balconies (e.g. "5+", "4+", "3+")
+            $isPlusFormat = in_array($field, ['bedrooms', 'bathrooms', 'balconies']) && is_string($value) && preg_match('/^\d+\+$/', trim($value));
+            if ($isEmpty || (!$isNumeric && !$isPlusFormat)) {
                 $errors[$field] = ucfirst(str_replace('_', ' ', $field)) . ' is required';
             }
         } else {
