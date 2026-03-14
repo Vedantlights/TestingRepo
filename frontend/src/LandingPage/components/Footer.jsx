@@ -117,7 +117,7 @@ const Footer = () => {
             {/* Social Media */}
             <div className="footer-social">
               <a 
-                href="https://www.facebook.com/profile.php?id=61585564109339" 
+                href="https://www.facebook.com/people/360-Coordinates/61587038531317/" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-link" 
@@ -128,7 +128,7 @@ const Footer = () => {
                 </svg>
               </a>
               <a 
-                href="https://www.instagram.com/360coordinates_official/" 
+                href="https://www.instagram.com/360_coordinates" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-link" 
