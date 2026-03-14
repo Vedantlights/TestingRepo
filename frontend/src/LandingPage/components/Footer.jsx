@@ -26,7 +26,7 @@ const Footer = () => {
           {/* About Section with Logo */}
           <div className="footer-column footer-about">
             <div className="footer-logo">
-              <img src="/logoswhite.png" alt="India Propertys" className="footer-logo-image" />
+              <img src="/logoswhites.png" alt="India Propertys" className="footer-logo-image" />
             </div>
             <p className="footer-description">
               Vedant Infoedge India LLP is a trusted real estate platform dedicated to helping buyers, sellers, and renters connect seamlessly. We provide verified property listings, transparent pricing, and expert support to make real estate transactions simpler, safer, and faster. Whether you're searching for your dream home or the perfect commercial space, we are here to guide you every step of the way.
